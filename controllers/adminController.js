@@ -1,202 +1,250 @@
 // ─────────────────────────────────────────────────────────
-//  controllers/adminController.js — Admin-Only Operations
+//  controllers/adminController.js — Admin Auth & Dashboard
 // ─────────────────────────────────────────────────────────
 const User = require("../models/User");
+const Product = require("../models/Product");
+const Order = require("../models/Order");
 const ApiResponse = require("../utils/ApiResponse");
+const { logAction } = require("../services/auditService");
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  setRefreshTokenCookie,
+} = require("../utils/generateToken");
 
-// ═════════════════════════════════════════════════════════
-//  GET /api/admin/users — List All Users
-// ═════════════════════════════════════════════════════════
-exports.getAllUsers = async (req, res) => {
+// ═══════════════════════════════════════════════════════
+//  POST /api/admin/register
+// ═══════════════════════════════════════════════════════
+exports.adminRegister = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-    const search = req.query.search || "";
-    const role = req.query.role || "";
+    const { name, email, password } = req.body;
 
-    // Build filter
-    const filter = {};
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-      ];
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return ApiResponse.error(res, "Admin with this email already exists", 409);
     }
-    if (role) filter.role = role;
 
-    const [users, total] = await Promise.all([
-      User.find(filter)
-        .select("-refreshTokens")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      User.countDocuments(filter),
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: "admin",
+      isEmailVerified: true,
+      approvalStatus: "approved",
+    });
+
+    const accessToken = generateAccessToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user._id);
+    user.refreshTokens.push({ token: refreshToken });
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+    setRefreshTokenCookie(res, refreshToken);
+
+    return ApiResponse.created(res, "Admin registered successfully", {
+      token: accessToken,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error("Admin register error:", error);
+    return ApiResponse.serverError(res, error.message);
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  POST /api/admin/login
+// ═══════════════════════════════════════════════════════
+exports.adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email, role: "admin" }).select("+password");
+    if (!user) {
+      return ApiResponse.unauthorized(res, "Invalid admin credentials");
+    }
+    if (!user.isActive) {
+      return ApiResponse.unauthorized(res, "Account deactivated");
+    }
+    if (user.isLocked()) {
+      return ApiResponse.error(res, "Account locked. Try again in 30 minutes.", 423);
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      await user.incrementLoginAttempts();
+      return ApiResponse.unauthorized(res, "Invalid admin credentials");
+    }
+
+    user.loginAttempts = 0;
+    user.lockUntil = undefined;
+    const accessToken = generateAccessToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user._id);
+    user.refreshTokens.push({ token: refreshToken });
+    if (user.refreshTokens.length > 5) user.refreshTokens = user.refreshTokens.slice(-5);
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+    setRefreshTokenCookie(res, refreshToken);
+
+    await logAction(req, { action: "LOGIN", entity: "User", entityId: user._id, details: { email } });
+
+    return ApiResponse.success(res, "Admin login successful", {
+      token: accessToken,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error("Admin login error:", error);
+    return ApiResponse.serverError(res, error.message);
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  GET /api/admin/profile
+// ═══════════════════════════════════════════════════════
+exports.getAdminProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    return ApiResponse.success(res, "Admin profile retrieved", {
+      user: {
+        id: user._id, name: user.name, email: user.email,
+        phone: user.phone, role: user.role, avatar: user.avatar,
+        lastLogin: user.lastLogin, createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    return ApiResponse.serverError(res, error.message);
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  PUT /api/admin/update-profile
+// ═══════════════════════════════════════════════════════
+exports.updateAdminProfile = async (req, res) => {
+  try {
+    const { name, phone, avatar } = req.body;
+    const updates = {};
+    if (name) updates.name = name;
+    if (phone) updates.phone = phone;
+    if (avatar) updates.avatar = avatar;
+
+    const user = await User.findByIdAndUpdate(req.user._id, updates, {
+      new: true, runValidators: true,
+    });
+
+    await logAction(req, { action: "UPDATE", entity: "User", entityId: user._id, details: updates });
+
+    return ApiResponse.success(res, "Profile updated", {
+      user: { id: user._id, name: user.name, email: user.email, phone: user.phone },
+    });
+  } catch (error) {
+    return ApiResponse.serverError(res, error.message);
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  POST /api/admin/logout
+// ═══════════════════════════════════════════════════════
+exports.adminLogout = async (req, res) => {
+  try {
+    const token = req.cookies?.refreshToken || req.body?.refreshToken;
+    if (token) {
+      await User.findByIdAndUpdate(req.user._id, {
+        $pull: { refreshTokens: { token } },
+      });
+    }
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    await logAction(req, { action: "LOGOUT", entity: "User", entityId: req.user._id });
+
+    return ApiResponse.success(res, "Logged out successfully");
+  } catch (error) {
+    return ApiResponse.serverError(res, error.message);
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  GET /api/admin/dashboard
+// ═══════════════════════════════════════════════════════
+exports.getDashboard = async (req, res) => {
+  try {
+    const [
+      totalDistributors,
+      totalGarages,
+      totalCustomers,
+      totalProducts,
+      totalOrders,
+    ] = await Promise.all([
+      User.countDocuments({ role: "distributor" }),
+      User.countDocuments({ role: "garage" }),
+      User.countDocuments({ role: "customer" }),
+      Product.countDocuments({ isActive: true }),
+      Order.countDocuments(),
     ]);
 
-    return ApiResponse.success(res, "Users retrieved", {
-      users,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Get all users error:", error);
-    return ApiResponse.serverError(res, error.message);
-  }
-};
+    // Daily sales (today)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const dailySalesAgg = await Order.aggregate([
+      { $match: { createdAt: { $gte: todayStart }, paymentStatus: "paid" } },
+      { $group: { _id: null, total: { $sum: "$totalAmount" }, count: { $sum: 1 } } },
+    ]);
+    const dailySales = dailySalesAgg[0] || { total: 0, count: 0 };
 
-// ═════════════════════════════════════════════════════════
-//  GET /api/admin/users/:id — Get Single User
-// ═════════════════════════════════════════════════════════
-exports.getUserById = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select("-refreshTokens");
+    // Monthly revenue (current month)
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const monthlyRevenueAgg = await Order.aggregate([
+      { $match: { createdAt: { $gte: monthStart }, paymentStatus: "paid" } },
+      { $group: { _id: null, total: { $sum: "$totalAmount" }, count: { $sum: 1 } } },
+    ]);
+    const monthlyRevenue = monthlyRevenueAgg[0] || { total: 0, count: 0 };
 
-    if (!user) {
-      return ApiResponse.notFound(res, "User not found");
-    }
-
-    return ApiResponse.success(res, "User retrieved", { user });
-  } catch (error) {
-    console.error("Get user by id error:", error);
-    return ApiResponse.serverError(res, error.message);
-  }
-};
-
-// ═════════════════════════════════════════════════════════
-//  PUT /api/admin/users/:id/role — Update User Role
-// ═════════════════════════════════════════════════════════
-exports.updateUserRole = async (req, res) => {
-  try {
-    const { role } = req.body;
-
-    if (!["user", "admin"].includes(role)) {
-      return ApiResponse.error(res, "Invalid role. Must be 'user' or 'admin'.");
-    }
-
-    // Prevent admin from changing their own role
-    if (req.params.id === req.user._id.toString()) {
-      return ApiResponse.error(res, "You cannot change your own role");
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { role },
-      { new: true, runValidators: true }
-    ).select("-refreshTokens");
-
-    if (!user) {
-      return ApiResponse.notFound(res, "User not found");
-    }
-
-    return ApiResponse.success(res, `User role updated to '${role}'`, { user });
-  } catch (error) {
-    console.error("Update user role error:", error);
-    return ApiResponse.serverError(res, error.message);
-  }
-};
-
-// ═════════════════════════════════════════════════════════
-//  PUT /api/admin/users/:id/toggle-status — Activate/Deactivate User
-// ═════════════════════════════════════════════════════════
-exports.toggleUserStatus = async (req, res) => {
-  try {
-    // Prevent self-deactivation
-    if (req.params.id === req.user._id.toString()) {
-      return ApiResponse.error(res, "You cannot deactivate your own account");
-    }
-
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return ApiResponse.notFound(res, "User not found");
-    }
-
-    user.isActive = !user.isActive;
-
-    // If deactivating, clear all refresh tokens
-    if (!user.isActive) {
-      user.refreshTokens = [];
-    }
-
-    await user.save({ validateBeforeSave: false });
-
-    return ApiResponse.success(
-      res,
-      `User ${user.isActive ? "activated" : "deactivated"} successfully`,
-      {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          isActive: user.isActive,
-        },
-      }
-    );
-  } catch (error) {
-    console.error("Toggle user status error:", error);
-    return ApiResponse.serverError(res, error.message);
-  }
-};
-
-// ═════════════════════════════════════════════════════════
-//  DELETE /api/admin/users/:id — Delete User
-// ═════════════════════════════════════════════════════════
-exports.deleteUser = async (req, res) => {
-  try {
-    if (req.params.id === req.user._id.toString()) {
-      return ApiResponse.error(res, "You cannot delete your own account");
-    }
-
-    const user = await User.findByIdAndDelete(req.params.id);
-
-    if (!user) {
-      return ApiResponse.notFound(res, "User not found");
-    }
-
-    return ApiResponse.success(res, "User deleted successfully");
-  } catch (error) {
-    console.error("Delete user error:", error);
-    return ApiResponse.serverError(res, error.message);
-  }
-};
-
-// ═════════════════════════════════════════════════════════
-//  GET /api/admin/stats — Dashboard Statistics
-// ═════════════════════════════════════════════════════════
-exports.getDashboardStats = async (req, res) => {
-  try {
-    const [totalUsers, verifiedUsers, activeUsers, adminUsers] =
-      await Promise.all([
-        User.countDocuments(),
-        User.countDocuments({ isEmailVerified: true }),
-        User.countDocuments({ isActive: true }),
-        User.countDocuments({ role: "admin" }),
-      ]);
-
-    // Users registered in the last 7 days
+    // Last 7 days chart data
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const newUsers = await User.countDocuments({
-      createdAt: { $gte: sevenDaysAgo },
+    const chartData = await Order.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo }, paymentStatus: "paid" } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          revenue: { $sum: "$totalAmount" },
+          orders: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Recent orders
+    const recentOrders = await Order.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("customer", "name email")
+      .select("orderNumber status totalAmount createdAt");
+
+    // Pending approvals
+    const pendingApprovals = await User.countDocuments({
+      approvalStatus: "pending",
+      role: { $in: ["distributor", "garage"] },
     });
 
-    return ApiResponse.success(res, "Dashboard stats retrieved", {
+    return ApiResponse.success(res, "Dashboard data retrieved", {
       stats: {
-        totalUsers,
-        verifiedUsers,
-        unverifiedUsers: totalUsers - verifiedUsers,
-        activeUsers,
-        inactiveUsers: totalUsers - activeUsers,
-        adminUsers,
-        regularUsers: totalUsers - adminUsers,
-        newUsersLast7Days: newUsers,
+        totalDistributors,
+        totalGarages,
+        totalCustomers,
+        totalProducts,
+        totalOrders,
+        pendingApprovals,
       },
+      dailySales: { amount: dailySales.total, count: dailySales.count },
+      monthlyRevenue: { amount: monthlyRevenue.total, count: monthlyRevenue.count },
+      chartData,
+      recentOrders,
     });
   } catch (error) {
-    console.error("Get dashboard stats error:", error);
+    console.error("Dashboard error:", error);
     return ApiResponse.serverError(res, error.message);
   }
 };

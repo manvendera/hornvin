@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────
-//  models/User.js — User Schema & Model
+//  models/User.js — User Schema & Model (Multi-Role)
 // ─────────────────────────────────────────────────────────
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
@@ -31,11 +31,78 @@ const userSchema = new mongoose.Schema(
       minlength: [8, "Password must be at least 8 characters"],
       select: false, // never return password by default
     },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    avatar: {
+      type: String,
+      default: null,
+    },
+
+    // ─── Role System (4 Roles) ────────────────────────
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      enum: ["admin", "distributor", "garage", "customer"],
+      default: "customer",
     },
+
+    // ─── Business Profile (for distributors & garages) ─
+    businessName: {
+      type: String,
+      trim: true,
+    },
+    businessAddress: {
+      street: String,
+      city: String,
+      state: String,
+      pincode: String,
+      country: { type: String, default: "India" },
+    },
+    gstNumber: {
+      type: String,
+      trim: true,
+    },
+    panNumber: {
+      type: String,
+      trim: true,
+    },
+
+    // ─── Distributor-Specific Fields ──────────────────
+    distributorRegion: {
+      type: String,
+      trim: true,
+    },
+    commissionRate: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+
+    // ─── Garage-Specific Fields ───────────────────────
+    garageType: {
+      type: String,
+      enum: ["authorized", "independent", "multi-brand"],
+    },
+    servicesOffered: [String],
+    operatingHours: {
+      open: String,
+      close: String,
+    },
+
+    // ─── Approval Workflow ────────────────────────────
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    approvedAt: Date,
+    rejectionReason: String,
 
     // ─── Email Verification ─────────────────────────
     isEmailVerified: {
@@ -65,6 +132,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: Date,
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     lastLogin: Date,
     loginAttempts: {
       type: Number,
@@ -77,9 +153,21 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// ─── Index for performance ──────────────────────────────
-// email index is auto-created by unique:true
+// ─── Indexes for performance ────────────────────────────
 userSchema.index({ "refreshTokens.token": 1 });
+userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
+userSchema.index({ isDeleted: 1 });
+userSchema.index({ approvalStatus: 1 });
+
+// ─── Default query: exclude soft-deleted ────────────────
+userSchema.pre(/^find/, function (next) {
+  // Only apply if not explicitly querying deleted docs
+  if (this.getOptions()._includeDeleted !== true) {
+    this.where({ isDeleted: { $ne: true } });
+  }
+  next();
+});
 
 // ─── Pre-save: Hash password ────────────────────────────
 userSchema.pre("save", async function (next) {
@@ -138,6 +226,16 @@ userSchema.methods.incrementLoginAttempts = async function () {
     updates.$set = { lockUntil: Date.now() + 30 * 60 * 1000 };
   }
   return this.updateOne(updates);
+};
+
+// Soft delete
+userSchema.methods.softDelete = function (deletedById) {
+  this.isDeleted = true;
+  this.isActive = false;
+  this.deletedAt = new Date();
+  this.deletedBy = deletedById;
+  this.refreshTokens = [];
+  return this.save({ validateBeforeSave: false });
 };
 
 module.exports = mongoose.model("User", userSchema);

@@ -1,0 +1,538 @@
+{
+  "info": {
+    "name": "Hornvin Admin Panel API",
+    "_postman_id": "hornvin-admin-api-v2",
+    "description": "Complete Admin Panel API for Hornvin Automobile E-commerce Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000/api" },
+    { "key": "admin_token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Admin Authentication",
+      "item": [
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/register", "host": ["{{base_url}}"], "path": ["admin", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@hornvin.com\",\n  \"password\": \"Admin@1234\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Admin registered successfully\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIs...\",\n    \"user\": {\n      \"id\": \"664...\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@hornvin.com\",\n      \"role\": \"admin\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/login", "host": ["{{base_url}}"], "path": ["admin", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@hornvin.com\",\n  \"password\": \"Admin@1234\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "  pm.collectionVariables.set('admin_token', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Admin Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/admin/profile", "host": ["{{base_url}}"], "path": ["admin", "profile"] }
+          }
+        },
+        {
+          "name": "Update Admin Profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/update-profile", "host": ["{{base_url}}"], "path": ["admin", "update-profile"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Super Admin\",\n  \"phone\": \"+91-9876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout Admin",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/admin/logout", "host": ["{{base_url}}"], "path": ["admin", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Data",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/admin/dashboard", "host": ["{{base_url}}"], "path": ["admin", "dashboard"] }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"stats\": {\n      \"totalDistributors\": 5,\n      \"totalGarages\": 12,\n      \"totalCustomers\": 150,\n      \"totalProducts\": 340,\n      \"totalOrders\": 890,\n      \"pendingApprovals\": 3\n    },\n    \"dailySales\": { \"amount\": 45000, \"count\": 12 },\n    \"monthlyRevenue\": { \"amount\": 1250000, \"count\": 345 },\n    \"chartData\": [...],\n    \"recentOrders\": [...]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Product Management",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/products", "host": ["{{base_url}}"], "path": ["admin", "products"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Brake Pad Set - Honda City\",\n  \"sku\": \"BP-HC-001\",\n  \"description\": \"High-performance ceramic brake pad set compatible with Honda City 2018-2024\",\n  \"price\": 2499,\n  \"mrp\": 3200,\n  \"costPrice\": 1800,\n  \"gstRate\": 18,\n  \"hsnCode\": \"87083000\",\n  \"category\": \"<category_id>\",\n  \"brand\": \"Brembo\",\n  \"tags\": [\"brake\", \"honda\", \"city\"],\n  \"specifications\": {\n    \"weight\": \"1.2 kg\",\n    \"material\": \"Ceramic\",\n    \"compatibleVehicles\": [\"Honda City 2018-2024\", \"Honda Amaze 2018-2024\"],\n    \"warranty\": \"1 Year\",\n    \"manufacturer\": \"Brembo India\"\n  },\n  \"stock\": 100,\n  \"lowStockThreshold\": 15\n}"
+            }
+          }
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/products?page=1&limit=20&search=brake&sortBy=price&sortOrder=asc",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "search", "value": "brake" },
+                { "key": "sortBy", "value": "price" },
+                { "key": "sortOrder", "value": "asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/admin/products/:id", "host": ["{{base_url}}"], "path": ["admin", "products", ":id"] }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/products/:id", "host": ["{{base_url}}"], "path": ["admin", "products", ":id"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 2299,\n  \"stock\": 150,\n  \"isFeatured\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/admin/products/:id", "host": ["{{base_url}}"], "path": ["admin", "products", ":id"] }
+          }
+        },
+        {
+          "name": "Bulk Upload Products",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/admin/products/bulk-upload", "host": ["{{base_url}}"], "path": ["admin", "products", "bulk-upload"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3a. Category Management",
+      "item": [
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/categories", "host": ["{{base_url}}"], "path": ["admin", "categories"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Brake System\",\n  \"description\": \"All brake-related automobile parts\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/admin/categories", "host": ["{{base_url}}"], "path": ["admin", "categories"] }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/categories/:id", "host": ["{{base_url}}"], "path": ["admin", "categories", ":id"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Braking System\",\n  \"description\": \"Updated description\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/admin/categories/:id", "host": ["{{base_url}}"], "path": ["admin", "categories", ":id"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Inventory Management",
+      "item": [
+        {
+          "name": "Get Inventory",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/inventory?page=1&lowStock=false&search=",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "inventory"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "lowStock", "value": "false" },
+                { "key": "search", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Allocate Stock to Distributor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/inventory/allocate", "host": ["{{base_url}}"], "path": ["admin", "inventory", "allocate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"<product_id>\",\n  \"distributorId\": \"<distributor_id>\",\n  \"quantity\": 50,\n  \"note\": \"Monthly allocation\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Inventory",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/inventory/update", "host": ["{{base_url}}"], "path": ["admin", "inventory", "update"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"<product_id>\",\n  \"globalStock\": 500,\n  \"lowStockThreshold\": 20,\n  \"note\": \"Restocked from supplier\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. User Management",
+      "item": [
+        {
+          "name": "Create Distributor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/distributors", "host": ["{{base_url}}"], "path": ["admin", "distributors"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rajesh Kumar\",\n  \"email\": \"rajesh@distributor.com\",\n  \"password\": \"Dist@1234\",\n  \"phone\": \"+91-9876543210\",\n  \"businessName\": \"Kumar Auto Parts\",\n  \"businessAddress\": {\n    \"street\": \"123 Industrial Area\",\n    \"city\": \"Delhi\",\n    \"state\": \"Delhi\",\n    \"pincode\": \"110001\"\n  },\n  \"gstNumber\": \"07AAACH1234F1ZK\",\n  \"distributorRegion\": \"North India\",\n  \"commissionRate\": 8\n}"
+            }
+          }
+        },
+        {
+          "name": "List Distributors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/distributors?page=1&search=&status=active",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "distributors"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "active" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Distributor",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/admin/distributors/:id", "host": ["{{base_url}}"], "path": ["admin", "distributors", ":id"] }
+          }
+        },
+        {
+          "name": "List Garages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/garages?page=1&approval=pending",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "garages"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "approval", "value": "pending" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve/Reject Garage",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/garages/approve/:id", "host": ["{{base_url}}"], "path": ["admin", "garages", "approve", ":id"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"approve\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Customers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/customers?page=1&search=",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "search", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Customer",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/admin/customers/:id", "host": ["{{base_url}}"], "path": ["admin", "customers", ":id"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Order Management",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/orders?page=1&status=pending&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "status", "value": "pending" },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/admin/orders/:id", "host": ["{{base_url}}"], "path": ["admin", "orders", ":id"] }
+          }
+        },
+        {
+          "name": "Assign Distributor to Order",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/orders/assign-distributor/:id", "host": ["{{base_url}}"], "path": ["admin", "orders", "assign-distributor", ":id"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"distributorId\": \"<distributor_id>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/orders/update-status/:id", "host": ["{{base_url}}"], "path": ["admin", "orders", "update-status", ":id"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shipped\",\n  \"note\": \"Shipped via BlueDart\",\n  \"trackingNumber\": \"BD123456789\",\n  \"estimatedDelivery\": \"2026-04-30\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Process Refund",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/orders/refund/:id", "host": ["{{base_url}}"], "path": ["admin", "orders", "refund", ":id"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 2499,\n  \"reason\": \"Customer requested cancellation\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Finance & Reports",
+      "item": [
+        {
+          "name": "Sales Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/reports/sales?period=monthly&dateFrom=2026-01-01&dateTo=2026-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reports", "sales"],
+              "query": [
+                { "key": "period", "value": "monthly" },
+                { "key": "dateFrom", "value": "2026-01-01" },
+                { "key": "dateTo", "value": "2026-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Revenue Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/reports/revenue?year=2026",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reports", "revenue"],
+              "query": [{ "key": "year", "value": "2026" }]
+            }
+          }
+        },
+        {
+          "name": "GST Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/reports/gst?month=4&year=2026",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reports", "gst"],
+              "query": [
+                { "key": "month", "value": "4" },
+                { "key": "year", "value": "2026" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Invoice PDF",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/admin/invoice/:orderId", "host": ["{{base_url}}"], "path": ["admin", "invoice", ":orderId"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Notifications",
+      "item": [
+        {
+          "name": "Broadcast Notification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/notifications/broadcast", "host": ["{{base_url}}"], "path": ["admin", "notifications", "broadcast"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Flash Sale! 20% Off\",\n  \"message\": \"Get 20% off on all brake parts this weekend. Use code BRAKE20.\",\n  \"priority\": \"high\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Targeted Notification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/notifications/target", "host": ["{{base_url}}"], "path": ["admin", "notifications", "target"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Stock Available\",\n  \"message\": \"Premium brake pads are now back in stock. Place your orders.\",\n  \"targetRoles\": [\"distributor\"],\n  \"priority\": \"medium\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/notifications?page=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "notifications"],
+              "query": [{ "key": "page", "value": "1" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "API Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          }
+        }
+      ]
+    }
+  ]
+}

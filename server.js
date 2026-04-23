@@ -27,15 +27,18 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 app.use(morgan("dev"));
+
+// ─── Static Files (uploads) ──────────────────────────────
+app.use("/uploads", express.static("uploads"));
 
 // ─── Rate Limiting ────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per window
+  max: 200, // limit each IP to 200 requests per window
   message: {
     success: false,
     message: "Too many requests, please try again after 15 minutes.",
@@ -55,14 +58,17 @@ const authLimiter = rateLimit({
   },
 });
 app.use("/api/v1/auth", authLimiter);
+app.use("/api/admin/login", authLimiter);
+app.use("/api/admin/register", authLimiter);
 
 // ─── Health Check ─────────────────────────────────────────
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "🚀 Auth API is running",
+    message: "🚀 Hornvin Admin API is running",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
+    version: "2.0.0",
   });
 });
 
@@ -77,6 +83,7 @@ app.use(errorHandler);
 // ─── Start Server ─────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`\n🔐 Auth Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+  console.log(`\n🔐 Hornvin Admin Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`   Health: http://localhost:${PORT}/api/health`);
+  console.log(`   Admin API: http://localhost:${PORT}/api/admin\n`);
 });
