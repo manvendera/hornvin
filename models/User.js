@@ -68,6 +68,20 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // ─── Customer-Specific Fields ─────────────────────
+    addresses: [
+      {
+        name: String,
+        phone: String,
+        street: String,
+        city: String,
+        state: String,
+        pincode: String,
+        country: { type: String, default: "India" },
+        isDefault: { type: Boolean, default: false },
+      },
+    ],
+
     // ─── Distributor-Specific Fields ──────────────────
     distributorRegion: {
       type: String,

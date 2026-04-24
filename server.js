@@ -11,7 +11,10 @@ const rateLimit = require("express-rate-limit");
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
-const adminRoutes = require("./routes/adminRoutes");
+const adminRoutes = require("./routes/admin");
+const distributorRoutes = require("./routes/distributor");
+const customerRoutes = require("./routes/customer");
+const garageRoutes = require("./routes/garage");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 // ─── Connect to MongoDB ──────────────────────────────────
@@ -75,6 +78,9 @@ app.get("/api/health", (req, res) => {
 // ─── API Routes ───────────────────────────────────────────
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/distributor", distributorRoutes);
+app.use("/api/customer", customerRoutes);
+app.use("/api/garage", garageRoutes);
 
 // ─── Error Handling ───────────────────────────────────────
 app.use(notFound);

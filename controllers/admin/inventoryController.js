@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────
-//  controllers/inventoryController.js — Inventory Management
+//  controllers/admin/inventoryController.js — Inventory Management
 // ─────────────────────────────────────────────────────────
-const Inventory = require("../models/Inventory");
-const Product = require("../models/Product");
-const User = require("../models/User");
-const ApiResponse = require("../utils/ApiResponse");
-const { logAction } = require("../services/auditService");
+const Inventory = require("../../models/Inventory");
+const Product = require("../../models/Product");
+const User = require("../../models/User");
+const ApiResponse = require("../../utils/ApiResponse");
+const { logAction } = require("../../services/auditService");
 
 // GET /api/admin/inventory
 exports.getInventory = async (req, res) => {

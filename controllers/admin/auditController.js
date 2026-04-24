@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────────────────
-//  controllers/auditController.js — Audit Log APIs
+//  controllers/admin/auditController.js — Audit Log APIs
 // ─────────────────────────────────────────────────────────
-const AuditLog = require("../models/AuditLog");
-const ApiResponse = require("../utils/ApiResponse");
+const AuditLog = require("../../models/AuditLog");
+const ApiResponse = require("../../utils/ApiResponse");
 
 // GET /api/admin/audit-logs
 exports.getAuditLogs = async (req, res) => {

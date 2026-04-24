@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────────────────
-//  controllers/financeController.js — Finance & Reports
+//  controllers/admin/financeController.js — Finance & Reports
 // ─────────────────────────────────────────────────────────
-const Order = require("../models/Order");
-const ApiResponse = require("../utils/ApiResponse");
-const { generateInvoicePDF } = require("../services/invoiceService");
-const { logAction } = require("../services/auditService");
+const Order = require("../../models/Order");
+const ApiResponse = require("../../utils/ApiResponse");
+const { generateInvoicePDF } = require("../../services/invoiceService");
+const { logAction } = require("../../services/auditService");
 
 // GET /api/admin/reports/sales
 exports.getSalesReport = async (req, res) => {

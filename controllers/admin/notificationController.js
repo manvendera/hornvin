@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────────────────
-//  controllers/notificationController.js — Notification APIs
+//  controllers/admin/notificationController.js — Notification APIs
 // ─────────────────────────────────────────────────────────
-const Notification = require("../models/Notification");
-const User = require("../models/User");
-const ApiResponse = require("../utils/ApiResponse");
-const { logAction } = require("../services/auditService");
+const Notification = require("../../models/Notification");
+const User = require("../../models/User");
+const ApiResponse = require("../../utils/ApiResponse");
+const { logAction } = require("../../services/auditService");
 
 // POST /api/admin/notifications/broadcast
 exports.broadcastNotification = async (req, res) => {

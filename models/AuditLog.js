@@ -8,24 +8,14 @@ const auditLogSchema = new mongoose.Schema(
     action: {
       type: String,
       required: true,
-      enum: [
-        "CREATE", "UPDATE", "DELETE", "LOGIN", "LOGOUT",
-        "APPROVE", "REJECT", "ASSIGN", "REFUND", "BULK_UPLOAD",
-        "STATUS_CHANGE", "ALLOCATE", "NOTIFICATION_SENT",
-      ],
     },
     entity: {
       type: String,
-      required: true,
-      enum: [
-        "User", "Product", "Category", "Order",
-        "Inventory", "Notification", "Invoice",
-      ],
     },
     entityId: {
       type: mongoose.Schema.Types.ObjectId,
     },
-    performedBy: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -33,7 +23,7 @@ const auditLogSchema = new mongoose.Schema(
     details: {
       type: mongoose.Schema.Types.Mixed,
     },
-    ipAddress: String,
+    ip: String,
     userAgent: String,
   },
   { timestamps: true }

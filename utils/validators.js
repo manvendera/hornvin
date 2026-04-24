@@ -103,6 +103,78 @@ const changePasswordSchema = Joi.object({
     })
 });
 
+// ─── Customer Schemas ─────────────────────────────────────
+const addressSchema = Joi.object({
+  name: Joi.string().required(),
+  phone: Joi.string().required(),
+  street: Joi.string().required(),
+  city: Joi.string().required(),
+  state: Joi.string().required(),
+  pincode: Joi.string().length(6).pattern(/^\d+$/).required(),
+  country: Joi.string().default("India"),
+  isDefault: Joi.boolean().default(false)
+});
+
+const addToCartSchema = Joi.object({
+  productId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+  quantity: Joi.number().integer().min(1).default(1)
+});
+
+const checkoutSchema = Joi.object({
+  addressId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+  paymentMethod: Joi.string().valid("cod", "card", "upi", "net_banking").required(),
+  customerNotes: Joi.string().max(500).allow("", null)
+});
+
+const reviewSchema = Joi.object({
+  productId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+  rating: Joi.number().min(1).max(5).required(),
+  comment: Joi.string().max(1000).allow("", null),
+  images: Joi.array().items(Joi.string().uri())
+});
+
+// ─── Garage Schemas ─────────────────────────────────────
+const garageProfileSchema = Joi.object({
+  businessName: Joi.string().required(),
+  servicesOffered: Joi.array().items(Joi.string()),
+  address: Joi.object({
+    street: Joi.string(),
+    city: Joi.string(),
+    state: Joi.string(),
+    pincode: Joi.string().length(6)
+  }),
+  gstDetails: Joi.object({
+    gstNumber: Joi.string(),
+    panNumber: Joi.string()
+  })
+});
+
+const staffSchema = Joi.object({
+  name: Joi.string().required(),
+  email: Joi.string().email().required(),
+  phone: Joi.string().required(),
+  role: Joi.string().valid("mechanic", "manager", "receptionist", "admin"),
+  specialization: Joi.array().items(Joi.string()),
+  salary: Joi.number()
+});
+
+const vehicleSchema = Joi.object({
+  ownerName: Joi.string().required(),
+  ownerPhone: Joi.string().required(),
+  registrationNumber: Joi.string().required(),
+  make: Joi.string().required(),
+  model: Joi.string().required(),
+  year: Joi.number(),
+  fuelType: Joi.string().valid("petrol", "diesel", "cng", "electric")
+});
+
+const serviceJobSchema = Joi.object({
+  vehicleId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+  serviceType: Joi.string().valid("general_service", "repair", "body_work", "inspection", "emergency").required(),
+  scheduledDate: Joi.date().required(),
+  complaints: Joi.array().items(Joi.string())
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
@@ -110,4 +182,12 @@ module.exports = {
   resetPasswordSchema,
   verifyOTPSchema,
   changePasswordSchema,
+  addressSchema,
+  addToCartSchema,
+  checkoutSchema,
+  reviewSchema,
+  garageProfileSchema,
+  staffSchema,
+  vehicleSchema,
+  serviceJobSchema
 };

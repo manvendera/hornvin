@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────
-//  controllers/productController.js — Product & Category CRUD
+//  controllers/admin/productController.js — Product & Category CRUD
 // ─────────────────────────────────────────────────────────
-const Product = require("../models/Product");
-const Category = require("../models/Category");
-const Inventory = require("../models/Inventory");
-const ApiResponse = require("../utils/ApiResponse");
-const { logAction } = require("../services/auditService");
+const Product = require("../../models/Product");
+const Category = require("../../models/Category");
+const Inventory = require("../../models/Inventory");
+const ApiResponse = require("../../utils/ApiResponse");
+const { logAction } = require("../../services/auditService");
 
 // ═══════════════════════════════════════════════════════
 //  PRODUCT CRUD

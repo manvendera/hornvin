@@ -1,16 +1,16 @@
 // ─────────────────────────────────────────────────────────
-//  controllers/adminController.js — Admin Auth & Dashboard
+//  controllers/admin/adminController.js — Admin Auth & Dashboard
 // ─────────────────────────────────────────────────────────
-const User = require("../models/User");
-const Product = require("../models/Product");
-const Order = require("../models/Order");
-const ApiResponse = require("../utils/ApiResponse");
-const { logAction } = require("../services/auditService");
+const User = require("../../models/User");
+const Product = require("../../models/Product");
+const Order = require("../../models/Order");
+const ApiResponse = require("../../utils/ApiResponse");
+const { logAction } = require("../../services/auditService");
 const {
   generateAccessToken,
   generateRefreshToken,
   setRefreshTokenCookie,
-} = require("../utils/generateToken");
+} = require("../../utils/generateToken");
 
 // ═══════════════════════════════════════════════════════
 //  POST /api/admin/register

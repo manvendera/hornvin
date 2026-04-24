@@ -1,9 +1,9 @@
 // ─────────────────────────────────────────────────────────
-//  controllers/userManagementController.js — User Management
+//  controllers/admin/userManagementController.js — User Management
 // ─────────────────────────────────────────────────────────
-const User = require("../models/User");
-const ApiResponse = require("../utils/ApiResponse");
-const { logAction } = require("../services/auditService");
+const User = require("../../models/User");
+const ApiResponse = require("../../utils/ApiResponse");
+const { logAction } = require("../../services/auditService");
 
 // ═══════════════════════════════════════════════════════
 //  DISTRIBUTOR MANAGEMENT

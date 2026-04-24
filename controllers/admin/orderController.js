@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────────────────
-//  controllers/orderController.js — Order Management
+//  controllers/admin/orderController.js — Order Management
 // ─────────────────────────────────────────────────────────
-const Order = require("../models/Order");
-const User = require("../models/User");
-const Product = require("../models/Product");
-const ApiResponse = require("../utils/ApiResponse");
-const { logAction } = require("../services/auditService");
-const { generateInvoicePDF } = require("../services/invoiceService");
+const Order = require("../../models/Order");
+const User = require("../../models/User");
+const Product = require("../../models/Product");
+const ApiResponse = require("../../utils/ApiResponse");
+const { logAction } = require("../../services/auditService");
+const { generateInvoicePDF } = require("../../services/invoiceService");
 
 // GET /api/admin/orders
 exports.getOrders = async (req, res) => {

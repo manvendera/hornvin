@@ -1,22 +1,22 @@
 // ─────────────────────────────────────────────────────────
-//  routes/adminRoutes.js — Admin Panel Routes (Complete)
+//  routes/admin/index.js — Admin Panel Routes (Modular)
 // ─────────────────────────────────────────────────────────
 const express = require("express");
 const router = express.Router();
 
-const { protect } = require("../middleware/authMiddleware");
-const { authorize } = require("../middleware/roleMiddleware");
-const { uploadCSV } = require("../config/multer");
+const { protect } = require("../../middleware/authMiddleware");
+const { authorize } = require("../../middleware/roleMiddleware");
+const { uploadCSV } = require("../../config/multer");
 
 // ─── Controllers ─────────────────────────────────────────
-const adminCtrl = require("../controllers/adminController");
-const productCtrl = require("../controllers/productController");
-const inventoryCtrl = require("../controllers/inventoryController");
-const userMgmtCtrl = require("../controllers/userManagementController");
-const orderCtrl = require("../controllers/orderController");
-const financeCtrl = require("../controllers/financeController");
-const notifCtrl = require("../controllers/notificationController");
-const auditCtrl = require("../controllers/auditController");
+const adminCtrl = require("../../controllers/admin/adminController");
+const productCtrl = require("../../controllers/admin/productController");
+const inventoryCtrl = require("../../controllers/admin/inventoryController");
+const userMgmtCtrl = require("../../controllers/admin/userManagementController");
+const orderCtrl = require("../../controllers/admin/orderController");
+const financeCtrl = require("../../controllers/admin/financeController");
+const notifCtrl = require("../../controllers/admin/notificationController");
+const auditCtrl = require("../../controllers/admin/auditController");
 
 // ═══════════════════════════════════════════════════════
 //  1. ADMIN AUTHENTICATION (public)
