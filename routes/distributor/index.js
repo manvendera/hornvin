@@ -5,7 +5,6 @@ const express = require("express");
 const router = express.Router();
 
 const { protect } = require("../../middleware/authMiddleware");
-const verifySupabaseToken = require("../../middleware/supabaseAuth");
 const { authorize, requireVerified, requireApproval } = require("../../middleware/roleMiddleware");
 const activityLogger = require("../../middleware/activityLogger");
 
@@ -24,8 +23,8 @@ const documentController = require("../../controllers/distributor/documentContro
 const recommendationController = require("../../controllers/distributor/recommendationController");
 
 // ─── Middleware Chain ──────────────────────────────────────
-// All routes here require: login (Supabase) + distributor role + approved account + logging
-router.use(verifySupabaseToken);
+// All routes here require: login + distributor role + approved account + logging
+router.use(protect);
 router.use(authorize("distributor"));
 router.use(requireApproval);
 router.use(activityLogger);

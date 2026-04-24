@@ -34,6 +34,9 @@ const registerSchema = Joi.object({
       "any.only": "Passwords do not match",
       "any.required": "Please confirm your password",
     }),
+  phone: Joi.string().pattern(/^\d{10}$/).messages({
+    "string.pattern.base": "Phone number must be 10 digits",
+  }),
 });
 
 const loginSchema = Joi.object({

@@ -78,8 +78,18 @@ exports.addStaff = async (req, res) => {
     // 1. Check if user already exists or create new placeholder user
     let user = await User.findOne({ email });
     if (!user) {
-      // In real scenario, send invite or create with random password
-      user = await User.create({ name, email, phone, role: "garage", isActive: true });
+      // Create new user with a temporary password
+      const tempPassword = `Hornvin@${Math.floor(1000 + Math.random() * 9000)}`;
+      user = await User.create({ 
+        name, 
+        email, 
+        phone, 
+        password: tempPassword,
+        role: "garage", 
+        isActive: true,
+        isEmailVerified: true // assume verified if added by owner
+      });
+      // Note: In production, send an email to staff with their tempPassword
     }
 
     const staff = await Staff.create({
