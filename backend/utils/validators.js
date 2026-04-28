@@ -39,14 +39,19 @@ const garageRegisterSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-  email: Joi.string().email().lowercase().trim().required().messages({
+  email: Joi.string().email().lowercase().trim().messages({
     "string.email": "Please enter a valid email address",
-    "any.required": "Email is required",
   }),
+  phoneNumber: Joi.string(),
+  identifier: Joi.string(),
   password: Joi.string().required().messages({
     "any.required": "Password is required",
   }),
+}).or("email", "phoneNumber", "identifier").messages({
+  "object.missing": "Please provide email, phone number, or identifier for login",
 });
+
+
 
 const forgotPasswordSchema = Joi.object({
   email: Joi.string().email().lowercase().trim().required().messages({

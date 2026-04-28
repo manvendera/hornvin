@@ -2,7 +2,7 @@ const Otp = require("../../models/Otp");
 const User = require("../../models/User");
 const ApiResponse = require("../../utils/ApiResponse");
 const { sendPhoneOTP } = require("../../utils/sendSMS");
-const jwt = require("jsonwebtoken");
+const { generateAccessToken } = require("../../utils/generateToken");
 
 /**
  * Generate 6-digit random OTP
@@ -25,16 +25,19 @@ exports.sendOTP = async (req, res) => {
     let user = await User.findOne({ phoneNumber });
     
     if (!user && process.env.NODE_ENV === 'development') {
-      console.log(`\n👷 [DEV MODE] Auto-creating distributor account for ${phoneNumber}...\n`);
+      console.log(`\n👷 [DEV MODE] Auto-creating ${role} account for ${phoneNumber}...\n`);
       user = await User.create({
-        name: `Distributor ${phoneNumber.slice(-4)}`,
+        name: `${role.charAt(0).toUpperCase() + role.slice(1)} ${phoneNumber.slice(-4)}`,
         phoneNumber: phoneNumber,
         password: 'password123',
-        role: 'distributor',
+        role: role,
         approvalStatus: 'approved',
-        isPhoneVerified: true
+        isPhoneVerified: true,
+        isEmailVerified: true,
+        email: `${role}${phoneNumber.slice(-4)}@example.com`
       });
     }
+
 
     if (!user) {
       return ApiResponse.error(res, "No account found with this phone number. Please contact admin.", 404);
@@ -45,7 +48,8 @@ exports.sendOTP = async (req, res) => {
     }
 
     // Generate OTP
-    const otpCode = (process.env.NODE_ENV === 'development') ? "123456" : generateOTP();
+    const otpCode = generateOTP();
+
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     // Store in DB
@@ -132,11 +136,7 @@ exports.verifyAndRegister = async (req, res) => {
     });
 
     // 6. Generate JWT
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '30d' }
-    );
+    const token = generateAccessToken(user._id, user.role);
 
     // 7. Cleanup OTP
     await Otp.deleteOne({ _id: otpRecord._id });
@@ -191,11 +191,7 @@ exports.verifyOTPAndLogin = async (req, res) => {
     }
 
     // 4. Generate JWT
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '30d' }
-    );
+    const token = generateAccessToken(user._id, user.role);
 
     // 5. Cleanup OTP
     await Otp.deleteOne({ _id: otpRecord._id });

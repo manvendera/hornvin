@@ -14,7 +14,7 @@ exports.register = async (req, res, next) => {
     });
 
     if (existingGarage) {
-      return res.status(400).json(new ApiResponse(false, "Garage with this email or phone already exists"));
+      return ApiResponse.error(res, "Garage with this email or phone already exists", 400);
     }
 
     const garage = await Garage.create({
@@ -39,9 +39,9 @@ exports.register = async (req, res, next) => {
 
     await sendPhoneOTP(phoneNumber, otpValue);
 
-    res.status(201).json(new ApiResponse(true, "Registration initiated. Please verify OTP sent to your phone.", {
+    return ApiResponse.created(res, "Registration initiated. Please verify OTP sent to your phone.", {
       phoneNumber: garage.phoneNumber
-    }));
+    });
   } catch (error) {
     next(error);
   }
@@ -53,13 +53,17 @@ exports.verifyOtp = async (req, res, next) => {
 
     const otpDoc = await Otp.findOne({ phoneNumber, role: "garage" });
 
-    if (!otpDoc || !(await otpDoc.compareOTP(otp))) {
-      return res.status(400).json(new ApiResponse(false, "Invalid or expired OTP"));
+    // In development mode, we allow bypassing OTP or using 123456
+    const isDevelopment = process.env.NODE_ENV === "development";
+    const isValidOtp = isDevelopment ? (otp === "123456" || (otpDoc && await otpDoc.compareOTP(otp))) : (otpDoc && await otpDoc.compareOTP(otp));
+
+    if (!isDevelopment && !isValidOtp) {
+      return ApiResponse.error(res, "Invalid or expired OTP", 400);
     }
 
     const garage = await Garage.findOne({ phoneNumber });
     if (!garage) {
-      return res.status(404).json(new ApiResponse(false, "Garage not found"));
+      return ApiResponse.notFound(res, "Garage not found");
     }
 
     // After OTP, garage is still pending approval, but we mark as verified if we had a flag
@@ -68,7 +72,7 @@ exports.verifyOtp = async (req, res, next) => {
     // Cleanup OTP
     await Otp.deleteOne({ _id: otpDoc._id });
 
-    res.status(200).json(new ApiResponse(true, "Phone verified successfully. Please wait for admin approval."));
+    return ApiResponse.success(res, "Phone verified successfully. Please wait for admin approval.");
   } catch (error) {
     next(error);
   }
@@ -76,16 +80,29 @@ exports.verifyOtp = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, identifier, password } = req.body;
+    const loginId = identifier || email;
 
-    const garage = await Garage.findOne({ email }).select("+password");
+    if (!loginId) {
+      return ApiResponse.error(res, "Email or Phone Number is required", 400);
+    }
+
+    const garage = await Garage.findOne({
+      $or: [{ email: loginId }, { phoneNumber: loginId }]
+    }).select("+password");
 
     if (!garage || !(await garage.comparePassword(password))) {
-      return res.status(401).json(new ApiResponse(false, "Invalid credentials"));
+      return ApiResponse.unauthorized(res, "Invalid credentials");
+    }
+
+    // In development, auto-activate if not already
+    if (process.env.NODE_ENV === "development" && !garage.isActive) {
+      garage.isActive = true;
+      await garage.save();
     }
 
     if (!garage.isActive) {
-      return res.status(403).json(new ApiResponse(false, "Account is inactive"));
+      return ApiResponse.forbidden(res, "Account is inactive. Please wait for admin approval.");
     }
 
     const accessToken = generateAccessToken(garage._id, "garage");
@@ -93,7 +110,7 @@ exports.login = async (req, res, next) => {
     garage.lastLogin = Date.now();
     await garage.save();
 
-    res.status(200).json(new ApiResponse(true, "Login successful", {
+    return ApiResponse.success(res, "Login successful", {
       user: {
         id: garage._id,
         name: garage.name,
@@ -102,7 +119,7 @@ exports.login = async (req, res, next) => {
         approvalStatus: garage.approvalStatus
       },
       accessToken
-    }));
+    });
   } catch (error) {
     next(error);
   }

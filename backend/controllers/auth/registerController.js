@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const User = require("../../models/User");
 const ApiResponse = require("../../utils/ApiResponse");
 const { sendVerificationOTP } = require("../../utils/sendEmail");
+const { generateAccessToken } = require("../../utils/generateToken");
 
 // ═════════════════════════════════════════════════════════
 //  POST /api/v1/auth/signup (Unified Role-Based Signup)
@@ -10,10 +11,17 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, phone, role, businessName, garageType, distributorRegion } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const query = [];
+    if (email) query.push({ email });
+    if (phone) query.push({ phoneNumber: phone });
+
+    const existingUser = await User.findOne({ $or: query });
     if (existingUser) {
-      return ApiResponse.error(res, "An account with this email already exists", 409);
+      const field = existingUser.email === email && email ? "email" : "phone number";
+      return ApiResponse.error(res, `An account with this ${field} already exists`, 409);
     }
+
+
 
     // Validate role
     const validRoles = ["admin", "distributor", "garage", "customer"];
@@ -28,7 +36,7 @@ exports.register = async (req, res) => {
       name,
       email,
       password,
-      phone,
+      phoneNumber: phone,
       role: userRole,
       businessName,
       garageType,
@@ -43,11 +51,19 @@ exports.register = async (req, res) => {
     // Send verification email
     await sendVerificationOTP(email, name, otp);
 
+    // Also log to console for development (since SMS API might not be available)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`\n📧 [VERIFICATION] OTP for ${email} / ${phone} is: ${otp}\n`);
+    }
+
+    const accessToken = generateAccessToken(user._id, user.role);
+    
     return res.status(201).json({
       success: true,
       message: requiresApproval 
         ? "Registration successful. Please verify your email and wait for admin approval."
         : "Registration successful. Please verify your email.",
+      token: accessToken,
       user: { id: user._id, name: user.name, email: user.email, role: user.role, status: user.approvalStatus }
     });
   } catch (error) {
@@ -63,17 +79,23 @@ exports.registerGarage = async (req, res) => {
   try {
     const { name, email, password, phone, businessName, garageType } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const query = [];
+    if (email) query.push({ email });
+    if (phone) query.push({ phoneNumber: phone });
+
+    const existingUser = await User.findOne({ $or: query });
     if (existingUser) {
-      return ApiResponse.error(res, "An account with this email already exists", 409);
+      const field = existingUser.email === email && email ? "email" : "phone number";
+      return ApiResponse.error(res, `An account with this ${field} already exists`, 409);
     }
+
 
     // Create garage user
     const user = await User.create({
       name,
       email,
       password,
-      phone,
+      phoneNumber: phone,
       role: "garage",
       businessName,
       garageType,
@@ -85,9 +107,22 @@ exports.registerGarage = async (req, res) => {
 
     await sendVerificationOTP(email, name, otp);
 
+    // Also log to console for development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`\n🏢 [GARAGE VERIFICATION] OTP for ${email} / ${phone} is: ${otp}\n`);
+    }
+    
+    // Send via SMS utility (which logs to console)
+    const { sendPhoneOTP } = require("../../utils/sendSMS");
+    await sendPhoneOTP(phone, otp);
+
+
+    const accessToken = generateAccessToken(user._id, user.role);
+
     return res.status(201).json({
       success: true,
       message: "Garage registration successful. Please verify email and wait for admin approval.",
+      token: accessToken,
       user: { id: user._id, name: user.name, role: user.role }
     });
   } catch (error) {
@@ -139,6 +174,11 @@ exports.resendOTP = async (req, res) => {
     const otp = user.generateEmailOTP();
     await user.save({ validateBeforeSave: false });
     await sendVerificationOTP(email, user.name, otp);
+
+    // Also log to console for development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`\n🔄 [RESEND] OTP for ${email} / ${user.phoneNumber} is: ${otp}\n`);
+    }
 
     return ApiResponse.success(res, "OTP resent successfully");
   } catch (error) {

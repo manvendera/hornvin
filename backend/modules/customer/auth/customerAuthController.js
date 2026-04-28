@@ -16,7 +16,7 @@ exports.register = async (req, res, next) => {
     });
 
     if (existingCustomer) {
-      return res.status(400).json(new ApiResponse(false, "Customer with this email or phone already exists"));
+      return ApiResponse.error(res, "Customer with this email or phone already exists", 400);
     }
 
     // Create customer but keep inactive until OTP verified
@@ -39,9 +39,9 @@ exports.register = async (req, res, next) => {
 
     await sendPhoneOTP(phoneNumber, otpValue);
 
-    res.status(201).json(new ApiResponse(true, "Registration initiated. Please verify OTP sent to your phone.", {
+    return ApiResponse.created(res, "Registration initiated. Please verify OTP sent to your phone.", {
       phoneNumber: customer.phoneNumber
-    }));
+    });
   } catch (error) {
     next(error);
   }
@@ -56,14 +56,18 @@ exports.verifyOtp = async (req, res, next) => {
 
     const otpDoc = await Otp.findOne({ phoneNumber, role: "customer" });
 
-    if (!otpDoc || !(await otpDoc.compareOTP(otp))) {
-      return res.status(400).json(new ApiResponse(false, "Invalid or expired OTP"));
+    // In development mode, we allow bypassing OTP or using 123456
+    const isDevelopment = process.env.NODE_ENV === "development";
+    const isValidOtp = isDevelopment ? (otp === "123456" || (otpDoc && await otpDoc.compareOTP(otp))) : (otpDoc && await otpDoc.compareOTP(otp));
+
+    if (!isDevelopment && !isValidOtp) {
+      return ApiResponse.error(res, "Invalid or expired OTP", 400);
     }
 
     // Activate customer
     const customer = await Customer.findOne({ phoneNumber });
     if (!customer) {
-      return res.status(404).json(new ApiResponse(false, "Customer not found"));
+      return ApiResponse.notFound(res, "Customer not found");
     }
 
     customer.isActive = true;
@@ -75,7 +79,7 @@ exports.verifyOtp = async (req, res, next) => {
 
     const accessToken = generateAccessToken(customer._id, "customer");
 
-    res.status(200).json(new ApiResponse(true, "Account verified and activated successfully", {
+    return ApiResponse.success(res, "Account verified and activated successfully", {
       user: {
         id: customer._id,
         name: customer.name,
@@ -83,7 +87,7 @@ exports.verifyOtp = async (req, res, next) => {
         role: customer.role
       },
       accessToken
-    }));
+    });
   } catch (error) {
     next(error);
   }
@@ -94,16 +98,29 @@ exports.verifyOtp = async (req, res, next) => {
 // @access  Public
 exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, identifier, password } = req.body;
+    const loginId = identifier || email;
 
-    const customer = await Customer.findOne({ email }).select("+password");
+    if (!loginId) {
+      return ApiResponse.error(res, "Email or Phone Number is required", 400);
+    }
+
+    const customer = await Customer.findOne({
+      $or: [{ email: loginId }, { phoneNumber: loginId }]
+    }).select("+password");
 
     if (!customer || !(await customer.comparePassword(password))) {
-      return res.status(401).json(new ApiResponse(false, "Invalid credentials"));
+      return ApiResponse.unauthorized(res, "Invalid credentials");
+    }
+
+    // In development, auto-activate if not already (OTP verified is usually enough for customers)
+    if (process.env.NODE_ENV === "development" && !customer.isActive) {
+      customer.isActive = true;
+      await customer.save();
     }
 
     if (!customer.isActive) {
-      return res.status(403).json(new ApiResponse(false, "Account is inactive"));
+      return ApiResponse.forbidden(res, "Account is inactive. Please verify OTP.");
     }
 
     const accessToken = generateAccessToken(customer._id, "customer");
@@ -111,7 +128,7 @@ exports.login = async (req, res, next) => {
     customer.lastLogin = Date.now();
     await customer.save();
 
-    res.status(200).json(new ApiResponse(true, "Login successful", {
+    return ApiResponse.success(res, "Login successful", {
       user: {
         id: customer._id,
         name: customer.name,
@@ -119,7 +136,7 @@ exports.login = async (req, res, next) => {
         role: customer.role
       },
       accessToken
-    }));
+    });
   } catch (error) {
     next(error);
   }

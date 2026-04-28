@@ -14,7 +14,7 @@
             {
               "name": "Register Admin",
               "request": {
-                "description": "Create a new Admin account. Admins have full access to the dashboard, including user management and order processing.",
+                "description": "Create a new Admin account. Returns an accessToken (token) for immediate authentication. Admins have full access to the dashboard.",
 
                 "method": "POST",
                 "header": [],
@@ -39,7 +39,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"admin@hornvin.com\",\n  \"password\": \"Admin@1234\"\n}",
+                  "raw": "{\n  \"identifier\": \"admin@hornvin.com\",\n  \"password\": \"Admin@1234\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "url": {
@@ -59,7 +59,7 @@
             {
               "name": "Register Distributor",
               "request": {
-                "description": "Register a new Distributor. Requires business details and region. Approval by Admin is required before login.",
+                "description": "Register a new Distributor. Returns an accessToken (token). Requires business details and region. In development, OTP is logged to the server console.",
 
                 "method": "POST",
                 "header": [],
@@ -75,7 +75,15 @@
                   "port": "5000",
                   "path": ["api", "distributor", "auth", "register"]
                 }
-              }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "Created",
+                  "code": 201,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Registration initiated. Please verify OTP sent to your phone.\",\n  \"data\": {\n    \"phoneNumber\": \"9876543210\"\n  }\n}"
+                }
+              ]
             },
             {
               "name": "Verify OTP (Distributor)",
@@ -94,7 +102,15 @@
                   "port": "5000",
                   "path": ["api", "distributor", "auth", "verify-otp"]
                 }
-              }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "OK",
+                  "code": 200,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Phone verified successfully. Please wait for admin approval.\"\n}"
+                }
+              ]
             },
             {
               "name": "Login Distributor",
@@ -103,7 +119,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"dist@example.com\",\n  \"password\": \"Dist@1234\"\n}",
+                  "raw": "{\n  \"identifier\": \"dist@example.com\",\n  \"password\": \"Dist@1234\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "url": {
@@ -113,7 +129,15 @@
                   "port": "5000",
                   "path": ["api", "distributor", "auth", "login"]
                 }
-              }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "OK",
+                  "code": 200,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"id\": \"64f...\",\n      \"name\": \"Distributor One\",\n      \"businessName\": \"Hornvin Parts North\",\n      \"role\": \"distributor\",\n      \"approvalStatus\": \"pending\"\n    }\n  }\n}"
+                }
+              ]
             }
           ]
         },
@@ -123,8 +147,7 @@
             {
               "name": "Register Garage",
               "request": {
-                "description": "Register a new Garage. Required fields: name (Full Name), businessName (Garage Name), phoneNumber, garageType (authorized, independent, multi-brand), email, password, confirmPassword. Approval by Admin is required.",
-
+                "description": "Register a new Garage. Returns an accessToken (token). Required fields: name, businessName, phoneNumber, garageType, email, password. In development, OTP is logged to console.",
                 "method": "POST",
                 "header": [],
                 "body": {
@@ -139,7 +162,15 @@
                   "port": "5000",
                   "path": ["api", "garage", "auth", "register"]
                 }
-              }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "Created",
+                  "code": 201,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Registration initiated. Please verify OTP sent to your phone.\",\n  \"data\": {\n    \"phoneNumber\": \"9888776655\"\n  }\n}"
+                }
+              ]
             },
             {
               "name": "Verify OTP (Garage)",
@@ -158,7 +189,15 @@
                   "port": "5000",
                   "path": ["api", "garage", "auth", "verify-otp"]
                 }
-              }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "OK",
+                  "code": 200,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Phone verified successfully. Please wait for admin approval.\"\n}"
+                }
+              ]
             },
             {
               "name": "Login Garage",
@@ -167,7 +206,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"garage@example.com\",\n  \"password\": \"Garage@1234\"\n}",
+                  "raw": "{\n  \"identifier\": \"garage@example.com\",\n  \"password\": \"Garage@1234\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "url": {
@@ -177,18 +216,26 @@
                   "port": "5000",
                   "path": ["api", "garage", "auth", "login"]
                 }
-              }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "OK",
+                  "code": 200,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"id\": \"64f...\",\n      \"name\": \"Garage Master\",\n      \"businessName\": \"QuickFix Garage\",\n      \"role\": \"garage\",\n      \"approvalStatus\": \"pending\"\n    }\n  }\n}"
+                }
+              ]
             }
           ]
-        },
+        }
+,
         {
           "name": "Customer Auth",
           "item": [
             {
               "name": "Register Customer",
               "request": {
-                "description": "Register a new Customer. Simple registration requiring name, email, phone, and password.",
-
+                "description": "Register a new Customer. Returns an accessToken (token). Simple registration requiring name, email, phone, and password.",
                 "method": "POST",
                 "header": [],
                 "body": {
@@ -203,7 +250,15 @@
                   "port": "5000",
                   "path": ["api", "customer", "auth", "register"]
                 }
-              }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "Created",
+                  "code": 201,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Registration initiated. Please verify OTP sent to your phone.\",\n  \"data\": {\n    \"phoneNumber\": \"9999888777\"\n  }\n}"
+                }
+              ]
             },
             {
               "name": "Verify OTP (Customer)",
@@ -222,7 +277,15 @@
                   "port": "5000",
                   "path": ["api", "customer", "auth", "verify-otp"]
                 }
-              }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "OK",
+                  "code": 200,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Account verified and activated successfully\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"id\": \"64f...\",\n      \"name\": \"John Doe\",\n      \"email\": \"john@customer.com\",\n      \"role\": \"customer\"\n    }\n  }\n}"
+                }
+              ]
             },
             {
               "name": "Login Customer",
@@ -231,7 +294,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"john@customer.com\",\n  \"password\": \"John@1234\"\n}",
+                  "raw": "{\n  \"identifier\": \"john@customer.com\",\n  \"password\": \"John@1234\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "url": {
@@ -241,7 +304,15 @@
                   "port": "5000",
                   "path": ["api", "customer", "auth", "login"]
                 }
-              }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "OK",
+                  "code": 200,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"id\": \"64f...\",\n      \"name\": \"John Doe\",\n      \"email\": \"john@customer.com\",\n      \"role\": \"customer\"\n    }\n  }\n}"
+                }
+              ]
             }
           ]
         }
@@ -283,7 +354,7 @@
                   "name": "Success",
                   "status": "Created",
                   "code": 201,
-                  "body": "{\n  \"success\": true,\n  \"message\": \"Admin registered successfully\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIs...\",\n    \"user\": {\n      \"id\": \"664...\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@hornvin.com\",\n      \"role\": \"admin\"\n    }\n  }\n}"
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Admin registered successfully\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"id\": \"664...\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@hornvin.com\",\n      \"role\": \"admin\"\n    }\n  }\n}"
                 }
               ]
             },
@@ -298,30 +369,33 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/admin/login",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "admin",
-                    "auth",
-                    "login"
-                  ]
+                  "raw": "http://localhost:5000/api/admin/auth/login",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "admin", "auth", "login"]
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"admin@hornvin.com\",\n  \"password\": \"Admin@1234\"\n}"
+                  "raw": "{\n  \"identifier\": \"admin@hornvin.com\",\n  \"password\": \"Admin@1234\"\n}"
                 }
               },
+              "response": [
+                {
+                  "name": "Success",
+                  "status": "OK",
+                  "code": 200,
+                  "body": "{\n  \"success\": true,\n  \"message\": \"Admin Login successful\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"id\": \"664...\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@hornvin.com\",\n      \"role\": \"admin\"\n    }\n  }\n}"
+                }
+              ],
               "event": [
                 {
                   "listen": "test",
                   "script": {
                     "exec": [
                       "var jsonData = pm.response.json();",
-                      "if (jsonData.data && jsonData.data.token) {",
-                      "  pm.collectionVariables.set('admin_token', jsonData.data.token);",
+                      "if (jsonData.token) {",
+                      "  pm.collectionVariables.set('admin_token', jsonData.token);",
                       "}"
                     ]
                   }
@@ -1387,7 +1461,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"john@customer.com\",\n  \"password\": \"John@1234\"\n}",
+                  "raw": "{\n  \"identifier\": \"john@customer.com\",\n  \"password\": \"John@1234\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "url": {
@@ -1827,7 +1901,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"dist@example.com\",\n  \"password\": \"Dist@1234\"\n}",
+                  "raw": "{\n  \"identifier\": \"dist@example.com\",\n  \"password\": \"Dist@1234\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "url": {
@@ -2022,7 +2096,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"garage@example.com\",\n  \"password\": \"Garage@1234\"\n}",
+                  "raw": "{\n  \"identifier\": \"garage@example.com\",\n  \"password\": \"Garage@1234\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "url": {

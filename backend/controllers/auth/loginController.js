@@ -12,12 +12,21 @@ const {
 // ═════════════════════════════════════════════════════════
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, phoneNumber, identifier, password } = req.body;
+    const loginId = identifier || email || phoneNumber;
 
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({
+      $or: [
+        { email: loginId.toLowerCase() },
+        { phoneNumber: loginId }
+      ]
+    }).select("+password");
+
     if (!user) {
-      return ApiResponse.unauthorized(res, "Invalid email or password");
+      return ApiResponse.unauthorized(res, "Invalid identifier or password");
     }
+
+
 
     if (!user.isActive) {
       return ApiResponse.unauthorized(res, "Your account has been deactivated. Contact support.");
@@ -30,7 +39,7 @@ exports.login = async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       await user.incrementLoginAttempts();
-      return ApiResponse.unauthorized(res, "Invalid email or password");
+      return ApiResponse.unauthorized(res, "Invalid identifier or password");
     }
 
     if (!user.isEmailVerified) {

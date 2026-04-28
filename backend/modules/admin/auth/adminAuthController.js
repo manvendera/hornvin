@@ -10,7 +10,7 @@ exports.register = async (req, res, next) => {
     const existingAdmin = await Admin.findOne({ email });
 
     if (existingAdmin) {
-      return res.status(400).json(new ApiResponse(false, "Admin with this email already exists"));
+      return ApiResponse.error(res, "Admin with this email already exists", 400);
     }
 
     const admin = await Admin.create({
@@ -22,7 +22,7 @@ exports.register = async (req, res, next) => {
 
     const accessToken = generateAccessToken(admin._id, "admin");
 
-    res.status(201).json(new ApiResponse(true, "Admin registered successfully", {
+    return ApiResponse.created(res, "Admin registered successfully", {
       user: {
         id: admin._id,
         name: admin.name,
@@ -30,7 +30,7 @@ exports.register = async (req, res, next) => {
         role: admin.role
       },
       accessToken
-    }));
+    });
   } catch (error) {
     next(error);
   }
@@ -38,12 +38,19 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, identifier, password } = req.body;
+    const loginId = identifier || email;
 
-    const admin = await Admin.findOne({ email }).select("+password");
+    if (!loginId) {
+      return ApiResponse.error(res, "Email or Username is required", 400);
+    }
+
+    const admin = await Admin.findOne({
+      $or: [{ email: loginId }, { username: loginId }]
+    }).select("+password");
 
     if (!admin || !(await admin.comparePassword(password))) {
-      return res.status(401).json(new ApiResponse(false, "Invalid credentials"));
+      return ApiResponse.unauthorized(res, "Invalid credentials");
     }
 
     const accessToken = generateAccessToken(admin._id, "admin");
@@ -51,7 +58,7 @@ exports.login = async (req, res, next) => {
     admin.lastLogin = Date.now();
     await admin.save();
 
-    res.status(200).json(new ApiResponse(true, "Admin Login successful", {
+    return ApiResponse.success(res, "Admin Login successful", {
       user: {
         id: admin._id,
         name: admin.name,
@@ -59,7 +66,7 @@ exports.login = async (req, res, next) => {
         role: admin.role
       },
       accessToken
-    }));
+    });
   } catch (error) {
     next(error);
   }
