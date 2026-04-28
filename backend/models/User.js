@@ -16,8 +16,8 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, "Email is required"],
       unique: true,
+      sparse: true, // Allows null/missing emails while maintaining uniqueness
       lowercase: true,
       trim: true,
       match: [
@@ -25,15 +25,21 @@ const userSchema = new mongoose.Schema(
         "Please enter a valid email",
       ],
     },
+    phoneNumber: {
+      type: String,
+      required: [true, "Phone number is required"],
+      unique: true,
+      trim: true,
+    },
+    isPhoneVerified: {
+      type: Boolean,
+      default: false,
+    },
     password: {
       type: String,
       required: [true, "Password is required"],
       minlength: [8, "Password must be at least 8 characters"],
       select: false, // never return password by default
-    },
-    phone: {
-      type: String,
-      trim: true,
     },
     avatar: {
       type: String,
@@ -43,7 +49,7 @@ const userSchema = new mongoose.Schema(
     // ─── Role System (4 Roles) ────────────────────────
     role: {
       type: String,
-      enum: ["admin", "distributor", "garage", "customer"],
+      enum: ["admin", "distributor", "garage", "customer", "sales_team"],
       default: "customer",
     },
 

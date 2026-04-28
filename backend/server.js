@@ -80,6 +80,13 @@ app.get("/api/health", (req, res) => {
 // ─── API Routes ───────────────────────────────────────────
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/auth", authRoutes); // Standard alias
+
+// Multi-Panel Auth Routes
+app.use("/api/admin/auth", require("./modules/admin/auth/adminAuthRoutes"));
+app.use("/api/distributor/auth", require("./modules/distributor/auth/distributorAuthRoutes"));
+app.use("/api/garage/auth", require("./modules/garage/auth/garageAuthRoutes"));
+app.use("/api/customer/auth", require("./modules/customer/auth/customerAuthRoutes"));
+
 app.use("/api/admin", adminRoutes);
 app.use("/api/distributor", distributorRoutes);
 app.use("/api/customer", customerRoutes);
@@ -90,9 +97,20 @@ app.use(notFound);
 app.use(errorHandler);
 
 // ─── Start Server ─────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`\n🔐 Hornvin Admin Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/api/health`);
-  console.log(`   Admin API: http://localhost:${PORT}/api/admin\n`);
-});
+const startServer = (port) => {
+  const server = app.listen(port, () => {
+    console.log(`\n🚀 Hornvin Server running in ${process.env.NODE_ENV} mode on port ${port}`);
+    console.log(`   Health: http://localhost:${port}/api/health`);
+    console.log(`   Admin API: http://localhost:${port}/api/admin\n`);
+  }).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`⚠️  Port ${port} is already in use. Trying port ${port + 1}...`);
+      startServer(port + 1);
+    } else {
+      console.error('❌ Server startup error:', err);
+    }
+  });
+};
+
+const PORT = parseInt(process.env.PORT) || 5000;
+startServer(PORT);

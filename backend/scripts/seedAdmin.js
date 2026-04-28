@@ -20,6 +20,9 @@ const seedAdmin = async () => {
       existingAdmin.role = "admin";
       existingAdmin.approvalStatus = "approved";
       existingAdmin.isEmailVerified = true;
+      if (!existingAdmin.phoneNumber) {
+        existingAdmin.phoneNumber = "0000000000";
+      }
       await existingAdmin.save();
       console.log("Admin updated!");
     } else {
@@ -27,6 +30,7 @@ const seedAdmin = async () => {
       await User.create({
         name: "Super Admin",
         email: adminEmail,
+        phoneNumber: "0000000000",
         password: "password123",
         role: "admin",
         approvalStatus: "approved",

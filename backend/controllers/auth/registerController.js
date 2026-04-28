@@ -4,19 +4,37 @@ const ApiResponse = require("../../utils/ApiResponse");
 const { sendVerificationOTP } = require("../../utils/sendEmail");
 
 // ═════════════════════════════════════════════════════════
-//  POST /api/v1/auth/signup (General User/Customer)
+//  POST /api/v1/auth/signup (Unified Role-Based Signup)
 // ═════════════════════════════════════════════════════════
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, role, businessName, garageType, distributorRegion } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return ApiResponse.error(res, "An account with this email already exists", 409);
     }
 
-    // Create user (default role is customer)
-    const user = await User.create({ name, email, password, phone });
+    // Validate role
+    const validRoles = ["admin", "distributor", "garage", "customer"];
+    const userRole = validRoles.includes(role) ? role : "customer";
+
+    // Set approval status (Admin, Distributor, and Garage require approval)
+    const requiresApproval = ["admin", "distributor", "garage"].includes(userRole);
+    const approvalStatus = requiresApproval ? "pending" : "approved";
+
+    // Create user with provided fields
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: userRole,
+      businessName,
+      garageType,
+      distributorRegion,
+      approvalStatus
+    });
 
     // Generate OTP
     const otp = user.generateEmailOTP();
@@ -27,8 +45,10 @@ exports.register = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Registration successful. Please verify your email.",
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      message: requiresApproval 
+        ? "Registration successful. Please verify your email and wait for admin approval."
+        : "Registration successful. Please verify your email.",
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, status: user.approvalStatus }
     });
   } catch (error) {
     console.error("Register error:", error);

@@ -20,14 +20,33 @@ exports.createProduct = async (req, res) => {
       stock, lowStockThreshold, isFeatured,
     } = req.body;
 
+    if (!sku) {
+      return ApiResponse.error(res, "SKU is required", 400);
+    }
+
     const existingSku = await Product.findOne({ sku: sku.toUpperCase() });
     if (existingSku) {
       return ApiResponse.error(res, "Product with this SKU already exists", 409);
     }
 
+    let categoryId = category;
+    if (category && typeof category === "string" && category.length < 24) {
+      // It's likely a category name, not an ID
+      let categoryDoc = await Category.findOne({
+        name: { $regex: new RegExp(`^${category}$`, "i") },
+      });
+      if (!categoryDoc) {
+        categoryDoc = await Category.create({
+          name: category,
+          createdBy: req.user._id,
+        });
+      }
+      categoryId = categoryDoc._id;
+    }
+
     const product = await Product.create({
       name, sku: sku.toUpperCase(), description, shortDescription,
-      price, mrp, costPrice, gstRate, hsnCode, category, brand,
+      price, mrp, costPrice, gstRate, hsnCode, category: categoryId, brand,
       tags, images, specifications, stock: stock || 0,
       lowStockThreshold: lowStockThreshold || 10,
       isFeatured: isFeatured || false,

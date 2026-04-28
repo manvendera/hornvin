@@ -6,7 +6,7 @@ const router = express.Router();
 
 const { protect } = require("../../middleware/authMiddleware");
 const { authorize } = require("../../middleware/roleMiddleware");
-const { uploadCSV } = require("../../config/multer");
+const { uploadCSV, uploadImages } = require("../../config/multer");
 
 // ─── Controllers ─────────────────────────────────────────
 const adminCtrl = require("../../controllers/admin/adminController");
@@ -17,6 +17,7 @@ const orderCtrl = require("../../controllers/admin/orderController");
 const financeCtrl = require("../../controllers/admin/financeController");
 const notifCtrl = require("../../controllers/admin/notificationController");
 const auditCtrl = require("../../controllers/admin/auditController");
+const uploadCtrl = require("../../controllers/admin/uploadController");
 
 // ═══════════════════════════════════════════════════════
 //  1. ADMIN AUTHENTICATION (public)
@@ -77,6 +78,11 @@ router.put("/garages/approve/:id", userMgmtCtrl.approveGarage);
 router.get("/customers", userMgmtCtrl.getCustomers);
 router.delete("/customers/:id", userMgmtCtrl.deleteCustomer);
 
+// Sales Team
+router.post("/sales-team", userMgmtCtrl.createSalesTeam);
+router.get("/sales-team", userMgmtCtrl.getSalesTeam);
+router.delete("/sales-team/:id", userMgmtCtrl.deleteSalesTeam);
+
 // ═══════════════════════════════════════════════════════
 //  6. ORDER MANAGEMENT
 // ═══════════════════════════════════════════════════════
@@ -106,6 +112,9 @@ router.get("/notifications", notifCtrl.getNotifications);
 // ═══════════════════════════════════════════════════════
 router.get("/audit-logs", auditCtrl.getAuditLogs);
 router.get("/audit-logs/:id", auditCtrl.getAuditLogById);
+
+// ─── Image Upload ───────────────────────────────────────
+router.post("/upload-image", uploadImages.single("image"), uploadCtrl.uploadImage);
 
 // ═══════════════════════════════════════════════════════
 //  10. BULK UPLOAD

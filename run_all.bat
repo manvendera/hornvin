@@ -11,7 +11,15 @@ start "Hornvin Backend" cmd /k "cd backend && npm run dev"
 
 :: Start Frontend in a new window
 echo 🎨 Starting Flutter Frontend (Chrome)...
-start "Hornvin Frontend" cmd /k "cd frontend && flutter run -d chrome"
+if exist admin (
+    echo 📂 Using 'admin' directory...
+    start "Hornvin Frontend" cmd /k "cd admin && flutter run -d chrome"
+) else if exist frontend (
+    echo 📂 Using 'frontend' directory...
+    start "Hornvin Frontend" cmd /k "cd frontend && flutter run -d chrome"
+) else (
+    echo ❌ Error: Neither 'admin' nor 'frontend' directory found!
+)
 
 echo ✅ Both processes are launching. 
 echo 💡 If you see an error in the windows, please let me know!

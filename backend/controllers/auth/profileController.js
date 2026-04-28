@@ -19,11 +19,11 @@ exports.getMe = async (req, res) => {
 // ═════════════════════════════════════════════════════════
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email, phone } = req.body;
+    const { name, email, phoneNumber } = req.body;
     const updates = {};
 
     if (name) updates.name = name;
-    if (phone) updates.phone = phone;
+    if (phoneNumber) updates.phoneNumber = phoneNumber;
 
     if (email && email !== req.user.email) {
       const exists = await User.findOne({ email });
@@ -44,6 +44,35 @@ exports.updateProfile = async (req, res) => {
     }
 
     return ApiResponse.success(res, "Profile updated successfully", { user });
+  } catch (error) {
+    return ApiResponse.serverError(res, error.message);
+  }
+};
+
+// ═════════════════════════════════════════════════════════
+//  POST /api/v1/auth/upload-avatar (Protected)
+// ═════════════════════════════════════════════════════════
+exports.uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return ApiResponse.error(res, "Please upload an image file", 400);
+    }
+
+    // Generate URL (assuming base URL + uploads path)
+    const avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { avatar: avatarUrl },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Avatar uploaded successfully",
+      url: avatarUrl,
+      user
+    });
   } catch (error) {
     return ApiResponse.serverError(res, error.message);
   }

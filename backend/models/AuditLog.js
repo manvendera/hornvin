@@ -29,7 +29,7 @@ const auditLogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-auditLogSchema.index({ performedBy: 1 });
+auditLogSchema.index({ user: 1 });
 auditLogSchema.index({ entity: 1, entityId: 1 });
 auditLogSchema.index({ createdAt: -1 });
 

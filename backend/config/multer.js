@@ -7,6 +7,17 @@ const path = require("path");
 // Memory storage for processing files in buffer
 const storage = multer.memoryStorage();
 
+// Disk storage for permanent uploads
+const imageStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
 // File filter for images
 const imageFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif|webp/;
@@ -37,7 +48,7 @@ const csvFilter = (req, file, cb) => {
 
 // Upload middlewares
 const uploadImages = multer({
-  storage,
+  storage: imageStorage,
   fileFilter: imageFilter,
   limits: { fileSize: 5 * 1024 * 1024, files: 10 }, // 5MB per file, max 10
 });

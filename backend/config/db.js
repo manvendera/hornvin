@@ -14,7 +14,7 @@ const connectDB = async () => {
       console.log("\n💡 TIP: This usually means your IP address is not whitelisted in MongoDB Atlas.");
       console.log("   1. Log in to MongoDB Atlas.");
       console.log("   2. Go to 'Network Access'.");
-      console.log("   3. Add your current IP address (223.181.32.83) to the list.\n");
+      console.log("   3. Add your current IP address (122.183.41.64) to the list.\n");
     }
     
     process.exit(1);

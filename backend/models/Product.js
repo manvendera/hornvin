@@ -158,11 +158,14 @@ productSchema.index({ stock: 1 });
 
 // ─── Auto-generate slug ────────────────────────────────
 productSchema.pre("save", function (next) {
-  if (this.isModified("name")) {
-    this.slug = this.name
+  if (this.isModified("name") || this.isModified("sku")) {
+    const baseSlug = this.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
+    
+    // Append SKU to ensure uniqueness
+    this.slug = `${baseSlug}-${this.sku.toLowerCase()}`;
   }
   // Update isInStock
   this.isInStock = this.stock > 0;

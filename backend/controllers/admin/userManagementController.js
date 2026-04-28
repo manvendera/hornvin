@@ -239,3 +239,66 @@ exports.deleteCustomer = async (req, res) => {
     return ApiResponse.serverError(res, error.message);
   }
 };
+// ═══════════════════════════════════════════════════════
+//  SALES TEAM MANAGEMENT
+// ═══════════════════════════════════════════════════════
+
+// POST /api/admin/sales-team
+exports.createSalesTeam = async (req, res) => {
+  try {
+    const { name, email, password, phone } = req.body;
+
+    const existing = await User.findOne({ $or: [{ email }, { phoneNumber: phone }] });
+    if (existing) return ApiResponse.error(res, "Email or Phone already registered", 409);
+
+    const member = await User.create({
+      name, email, password, phoneNumber: phone, role: "sales_team",
+      isEmailVerified: true,
+      isPhoneVerified: true,
+      isActive: true,
+    });
+
+    await logAction(req, {
+      action: "CREATE", entity: "User",
+      entityId: member._id, details: { name, email, role: "sales_team" },
+    });
+
+    return ApiResponse.created(res, "Sales team member created", {
+      member: { id: member._id, name: member.name, email: member.email, role: member.role },
+    });
+  } catch (error) {
+    return ApiResponse.serverError(res, error.message);
+  }
+};
+
+// GET /api/admin/sales-team
+exports.getSalesTeam = async (req, res) => {
+  try {
+    const salesTeam = await User.find({ role: "sales_team", isDeleted: false })
+      .select("-password -refreshTokens")
+      .sort({ createdAt: -1 });
+
+    return ApiResponse.success(res, "Sales team retrieved", { salesTeam });
+  } catch (error) {
+    return ApiResponse.serverError(res, error.message);
+  }
+};
+
+// DELETE /api/admin/sales-team/:id
+exports.deleteSalesTeam = async (req, res) => {
+  try {
+    const member = await User.findOne({ _id: req.params.id, role: "sales_team" });
+    if (!member) return ApiResponse.notFound(res, "Sales team member not found");
+
+    await member.softDelete(req.user._id);
+
+    await logAction(req, {
+      action: "DELETE", entity: "User",
+      entityId: member._id, details: { name: member.name, role: "sales_team" },
+    });
+
+    return ApiResponse.success(res, "Sales team member deleted");
+  } catch (error) {
+    return ApiResponse.serverError(res, error.message);
+  }
+};

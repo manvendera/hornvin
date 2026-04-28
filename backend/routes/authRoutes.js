@@ -8,6 +8,8 @@ const registerCtrl = require("../controllers/auth/registerController");
 const loginCtrl = require("../controllers/auth/loginController");
 const passwordCtrl = require("../controllers/auth/passwordController");
 const profileCtrl = require("../controllers/auth/profileController");
+const otpCtrl = require("../controllers/auth/otpController");
+const upload = require("../middleware/upload");
 
 const { protect } = require("../middleware/authMiddleware");
 const { requireVerified } = require("../middleware/roleMiddleware");
@@ -22,6 +24,11 @@ const {
 } = require("../utils/validators");
 
 // ─── Public Routes ──────────────────────────────────────
+router.post("/send-otp", otpCtrl.sendOTP);
+router.post("/verify-otp", otpCtrl.verifyOTPAndLogin);
+router.post("/register-with-otp", otpCtrl.verifyAndRegister);
+router.post("/resend-phone-otp", otpCtrl.resendOTP);
+
 router.post("/signup", validate(registerSchema), registerCtrl.register);
 router.post("/register", validate(registerSchema), registerCtrl.register);
 router.post("/signup/garage", registerCtrl.registerGarage); // Add specific garage register
@@ -38,5 +45,6 @@ router.post("/logout-all", protect, loginCtrl.logoutAll);
 router.put("/change-password", protect, validate(changePasswordSchema), passwordCtrl.changePassword);
 router.get("/profile", protect, profileCtrl.getMe);
 router.put("/update-profile", protect, profileCtrl.updateProfile);
+router.post("/upload-avatar", protect, upload.single("image"), profileCtrl.uploadAvatar);
 
 module.exports = router;

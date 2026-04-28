@@ -6,247 +6,244 @@
   },
   "item": [
     {
-      "name": "Auth API - Complete",
+      "name": "Role-Based Authentication (Multi-Panel)",
       "item": [
         {
-          "name": "Signup",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Manvendera Pathak\",\n  \"email\": \"manvendera@gmail.com\",\n  \"password\": \"Strong@123\",\n  \"confirmPassword\": \"Strong@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+          "name": "Admin Auth",
+          "item": [
+            {
+              "name": "Register Admin",
+              "request": {
+                "description": "Create a new Admin account. Admins have full access to the dashboard, including user management and order processing.",
+
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@hornvin.com\",\n  \"password\": \"Admin@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/admin/auth/register",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "admin", "auth", "register"]
                 }
               }
             },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/signup",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "signup"
-              ]
+            {
+              "name": "Login Admin",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@hornvin.com\",\n  \"password\": \"Admin@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/admin/auth/login",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "admin", "auth", "login"]
+                }
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Login",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"manvendera@gmail.com\",\n  \"password\": \"Strong@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+          "name": "Distributor Auth",
+          "item": [
+            {
+              "name": "Register Distributor",
+              "request": {
+                "description": "Register a new Distributor. Requires business details and region. Approval by Admin is required before login.",
+
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Distributor One\",\n  \"email\": \"dist@example.com\",\n  \"phoneNumber\": \"9876543210\",\n  \"password\": \"Dist@1234\",\n  \"businessName\": \"Hornvin Parts North\",\n  \"businessAddress\": {\n    \"street\": \"123 Hub\",\n    \"city\": \"Delhi\",\n    \"state\": \"Delhi\",\n    \"pincode\": \"110001\"\n  },\n  \"distributorRegion\": \"North\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/distributor/auth/register",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "distributor", "auth", "register"]
                 }
               }
             },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/login",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Email Verification",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"manvendera@gmail.com\",\n  \"otp\": \"123456\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+            {
+              "name": "Verify OTP (Distributor)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"9876543210\",\n  \"otp\": \"123456\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/distributor/auth/verify-otp",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "distributor", "auth", "verify-otp"]
                 }
               }
             },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/verify-email",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "verify-email"
-              ]
+            {
+              "name": "Login Distributor",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"dist@example.com\",\n  \"password\": \"Dist@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/distributor/auth/login",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "distributor", "auth", "login"]
+                }
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Forgot Password",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"manvendera@gmail.com\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+          "name": "Garage Auth",
+          "item": [
+            {
+              "name": "Register Garage",
+              "request": {
+                "description": "Register a new Garage. Required fields: name (Full Name), businessName (Garage Name), phoneNumber, garageType (authorized, independent, multi-brand), email, password, confirmPassword. Approval by Admin is required.",
+
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Garage Master\",\n  \"businessName\": \"QuickFix Garage\",\n  \"phoneNumber\": \"9888776655\",\n  \"garageType\": \"independent\",\n  \"email\": \"garage@example.com\",\n  \"password\": \"Garage@1234\",\n  \"confirmPassword\": \"Garage@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/garage/auth/register",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "garage", "auth", "register"]
                 }
               }
             },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/forgot-password",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "forgot-password"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Reset Password",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"reset_token_here\",\n  \"newPassword\": \"NewStrong@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+            {
+              "name": "Verify OTP (Garage)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"9888776655\",\n  \"otp\": \"123456\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/garage/auth/verify-otp",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "garage", "auth", "verify-otp"]
                 }
               }
             },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/reset-password",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "reset-password"
-              ]
+            {
+              "name": "Login Garage",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"garage@example.com\",\n  \"password\": \"Garage@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/garage/auth/login",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "garage", "auth", "login"]
+                }
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Get Profile",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/profile",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "profile"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Change Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"oldPassword\": \"Strong@123\",\n  \"newPassword\": \"NewStrong@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+          "name": "Customer Auth",
+          "item": [
+            {
+              "name": "Register Customer",
+              "request": {
+                "description": "Register a new Customer. Simple registration requiring name, email, phone, and password.",
+
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@customer.com\",\n  \"phoneNumber\": \"9999888777\",\n  \"password\": \"John@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/customer/auth/register",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "customer", "auth", "register"]
                 }
               }
             },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/change-password",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "change-password"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+            {
+              "name": "Verify OTP (Customer)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"9999888777\",\n  \"otp\": \"123456\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/customer/auth/verify-otp",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "customer", "auth", "verify-otp"]
+                }
               }
-            ],
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/logout",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "logout"
-              ]
+            },
+            {
+              "name": "Login Customer",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"john@customer.com\",\n  \"password\": \"John@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/customer/auth/login",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5000",
+                  "path": ["api", "customer", "auth", "login"]
+                }
+              }
             }
-          }
+          ]
         }
       ]
     },
@@ -306,7 +303,9 @@
                     "{{base_url}}"
                   ],
                   "path": [
+                    "api",
                     "admin",
+                    "auth",
                     "login"
                   ]
                 },
@@ -334,12 +333,14 @@
               "request": {
                 "method": "GET",
                 "url": {
-                  "raw": "{{base_url}}/admin/profile",
+                  "raw": "{{base_url}}/api/admin/auth/profile",
                   "host": [
                     "{{base_url}}"
                   ],
                   "path": [
+                    "api",
                     "admin",
+                    "auth",
                     "profile"
                   ]
                 }
@@ -376,12 +377,14 @@
               "request": {
                 "method": "POST",
                 "url": {
-                  "raw": "{{base_url}}/admin/logout",
+                  "raw": "{{base_url}}/api/admin/auth/logout",
                   "host": [
                     "{{base_url}}"
                   ],
                   "path": [
+                    "api",
                     "admin",
+                    "auth",
                     "logout"
                   ]
                 }
@@ -412,7 +415,7 @@
                   "name": "Success",
                   "status": "OK",
                   "code": 200,
-                  "body": "{\n  \"success\": true,\n  \"data\": {\n    \"stats\": {\n      \"totalDistributors\": 5,\n      \"totalGarages\": 12,\n      \"totalCustomers\": 150,\n      \"totalProducts\": 340,\n      \"totalOrders\": 890,\n      \"pendingApprovals\": 3\n    },\n    \"dailySales\": { \"amount\": 45000, \"count\": 12 },\n    \"monthlyRevenue\": { \"amount\": 1250000, \"count\": 345 },\n    \"chartData\": [...],\n    \"recentOrders\": [...]\n  }\n}"
+                  "body": "{\n  \"success\": true,\n  \"data\": {\n    \"stats\": {\n      \"totalDistributors\": 5,\n      \"totalGarages\": 12,\n      \"totalCustomers\": 150,\n      \"totalSalesTeam\": 8,\n      \"totalProducts\": 340,\n      \"totalOrders\": 890,\n      \"pendingApprovals\": 3\n    },\n    \"dailySales\": { \"amount\": 45000, \"count\": 12 },\n    \"monthlyRevenue\": { \"amount\": 1250000, \"count\": 345 },\n    \"chartData\": [...],\n    \"recentOrders\": [...]\n  }\n}"
                 }
               ]
             }
@@ -931,6 +934,70 @@
           ]
         },
         {
+          "name": "5a. Sales Team Management",
+          "item": [
+            {
+              "name": "Create Sales Team Member",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/sales-team",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "sales-team"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Amit Shah\",\n  \"email\": \"amit@salesteam.com\",\n  \"password\": \"Sales@1234\",\n  \"phone\": \"+91-9988776655\"\n}"
+                }
+              }
+            },
+            {
+              "name": "List Sales Team",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/admin/sales-team",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "sales-team"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete Sales Team Member",
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{base_url}}/admin/sales-team/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "sales-team",
+                    ":id"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
           "name": "6. Order Management",
           "item": [
             {
@@ -1279,6 +1346,59 @@
     {
       "name": "Hornvin Customer B2C API",
       "item": [
+        {
+          "name": "0. Authentication",
+          "item": [
+            {
+              "name": "Register Customer",
+              "request": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@customer.com\",\n  \"phoneNumber\": \"9999888777\",\n  \"password\": \"John@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/customer/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "customer", "auth", "register"]
+                }
+              }
+            },
+            {
+              "name": "Verify OTP",
+              "request": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"9999888777\",\n  \"otp\": \"123456\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/customer/auth/verify-otp",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "customer", "auth", "verify-otp"]
+                }
+              }
+            },
+            {
+              "name": "Login Customer",
+              "request": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"john@customer.com\",\n  \"password\": \"John@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/customer/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "customer", "auth", "login"]
+                }
+              }
+            }
+          ]
+        },
         {
           "name": "Home Module",
           "item": [
@@ -1667,6 +1787,59 @@
       "name": "Hornvin Distributor Panel API",
       "item": [
         {
+          "name": "0. Authentication",
+          "item": [
+            {
+              "name": "Register Distributor",
+              "request": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Distributor One\",\n  \"email\": \"dist@example.com\",\n  \"phoneNumber\": \"9876543210\",\n  \"password\": \"Dist@1234\",\n  \"businessName\": \"Hornvin Parts North\",\n  \"businessAddress\": {\n    \"street\": \"123 Hub\",\n    \"city\": \"Delhi\",\n    \"state\": \"Delhi\",\n    \"pincode\": \"110001\"\n  },\n  \"distributorRegion\": \"North\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/distributor/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "distributor", "auth", "register"]
+                }
+              }
+            },
+            {
+              "name": "Verify OTP",
+              "request": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"9876543210\",\n  \"otp\": \"123456\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/distributor/auth/verify-otp",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "distributor", "auth", "verify-otp"]
+                }
+              }
+            },
+            {
+              "name": "Login Distributor",
+              "request": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"dist@example.com\",\n  \"password\": \"Dist@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/distributor/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "distributor", "auth", "login"]
+                }
+              }
+            }
+          ]
+        },
+        {
           "name": "Dashboard",
           "item": [
             {
@@ -1808,6 +1981,59 @@
     {
       "name": "Hornvin Garage B2B API",
       "item": [
+        {
+          "name": "0. Authentication",
+          "item": [
+            {
+              "name": "Register Garage",
+              "request": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Garage Master\",\n  \"businessName\": \"QuickFix Garage\",\n  \"phoneNumber\": \"9888776655\",\n  \"garageType\": \"independent\",\n  \"email\": \"garage@example.com\",\n  \"password\": \"Garage@1234\",\n  \"confirmPassword\": \"Garage@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/garage/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "garage", "auth", "register"]
+                }
+              }
+            },
+            {
+              "name": "Verify OTP",
+              "request": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"9888776655\",\n  \"otp\": \"123456\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/garage/auth/verify-otp",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "garage", "auth", "verify-otp"]
+                }
+              }
+            },
+            {
+              "name": "Login Garage",
+              "request": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"garage@example.com\",\n  \"password\": \"Garage@1234\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/garage/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "garage", "auth", "login"]
+                }
+              }
+            }
+          ]
+        },
         {
           "name": "Profile & Staff",
           "item": [

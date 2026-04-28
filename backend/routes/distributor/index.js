@@ -21,6 +21,7 @@ const profileController = require("../../controllers/distributor/profileControll
 const analyticsController = require("../../controllers/distributor/analyticsController");
 const documentController = require("../../controllers/distributor/documentController");
 const recommendationController = require("../../controllers/distributor/recommendationController");
+const garageController = require("../../controllers/distributor/garageController");
 
 // ─── Middleware Chain ──────────────────────────────────────
 // All routes here require: login + distributor role + approved account + logging
@@ -70,6 +71,11 @@ router.patch("/refunds/:id", returnController.updateRefundStatus);
 router.get("/service-area", serviceAreaController.getServiceAreas);
 router.post("/service-area", serviceAreaController.addServiceArea);
 router.delete("/service-area/:id", serviceAreaController.deleteServiceArea);
+
+// ─── Garage Management ─────────────────────────────────────
+router.get("/garages", garageController.getGarages);
+router.get("/garages/:id", garageController.getGarageDetails);
+router.patch("/garages/:id", garageController.updateGarage);
 
 // ─── Profile & KYC ─────────────────────────────────────────
 router.get("/profile", profileController.getProfile);

@@ -3,40 +3,39 @@
 // ─────────────────────────────────────────────────────────
 const Joi = require("joi");
 
-const registerSchema = Joi.object({
-  name: Joi.string().trim().min(2).max(50).required().messages({
-    "string.min": "Name must be at least 2 characters",
-    "string.max": "Name cannot exceed 50 characters",
-    "any.required": "Name is required",
+const customerRegisterSchema = Joi.object({
+  name: Joi.string().required(),
+  email: Joi.string().email(),
+  phoneNumber: Joi.string().required(),
+  password: Joi.string().min(8).required(),
+});
+
+const distributorRegisterSchema = Joi.object({
+  name: Joi.string().required(),
+  email: Joi.string().email().required(),
+  phoneNumber: Joi.string().required(),
+  password: Joi.string().min(8).required(),
+  businessName: Joi.string().required(),
+  businessAddress: Joi.object({
+    street: Joi.string().required(),
+    city: Joi.string().required(),
+    state: Joi.string().required(),
+    pincode: Joi.string().required(),
+  }).required(),
+  distributorRegion: Joi.string().required(),
+});
+
+const garageRegisterSchema = Joi.object({
+  name: Joi.string().required().messages({ "any.required": "Full Name is required" }),
+  businessName: Joi.string().required().messages({ "any.required": "Garage Name is required" }),
+  phoneNumber: Joi.string().required().messages({ "any.required": "Phone Number is required" }),
+  garageType: Joi.string().valid("authorized", "independent", "multi-brand").required().messages({
+    "any.only": "Garage Type must be one of [authorized, independent, multi-brand]",
+    "any.required": "Garage Type is required"
   }),
-  email: Joi.string().email().lowercase().trim().required().messages({
-    "string.email": "Please enter a valid email address",
-    "any.required": "Email is required",
-  }),
-  password: Joi.string()
-    .min(8)
-    .max(128)
-    .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
-    )
-    .required()
-    .messages({
-      "string.min": "Password must be at least 8 characters",
-      "string.max": "Password cannot exceed 128 characters",
-      "string.pattern.base":
-        "Password must contain at least one uppercase, one lowercase, one number, and one special character",
-      "any.required": "Password is required",
-    }),
-  confirmPassword: Joi.string()
-    .valid(Joi.ref("password"))
-    .required()
-    .messages({
-      "any.only": "Passwords do not match",
-      "any.required": "Please confirm your password",
-    }),
-  phone: Joi.string().pattern(/^\d{10}$/).messages({
-    "string.pattern.base": "Phone number must be 10 digits",
-  }),
+  email: Joi.string().email().required().messages({ "string.email": "Invalid Email", "any.required": "Email is required" }),
+  password: Joi.string().min(8).required().messages({ "string.min": "Password must be at least 8 characters", "any.required": "Password is required" }),
+  confirmPassword: Joi.any().equal(Joi.ref("password")).required().messages({ "any.only": "Passwords do not match", "any.required": "Confirm Password is required" }),
 });
 
 const loginSchema = Joi.object({
@@ -179,7 +178,9 @@ const serviceJobSchema = Joi.object({
 });
 
 module.exports = {
-  registerSchema,
+  customerRegisterSchema,
+  distributorRegisterSchema,
+  garageRegisterSchema,
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,

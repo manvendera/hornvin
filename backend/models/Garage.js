@@ -1,43 +1,67 @@
-// ─────────────────────────────────────────────────────────
-//  models/Garage.js — Garage Profile Schema
-// ─────────────────────────────────────────────────────────
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const garageSchema = new mongoose.Schema(
   {
-    owner: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+      trim: true,
+    },
+    email: {
+      type: String,
       unique: true,
+      required: [true, "Email is required"],
+      lowercase: true,
+      trim: true,
+    },
+    phoneNumber: {
+      type: String,
+      required: [true, "Phone number is required"],
+      unique: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [8, "Password must be at least 8 characters"],
+      select: false,
+    },
+    role: {
+      type: String,
+      default: "garage",
+      immutable: true,
     },
     businessName: {
       type: String,
-      required: true,
+      required: [true, "Business Name is required"],
       trim: true,
     },
-    gstNumber: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
-    panNumber: String,
-    contactEmail: String,
-    contactPhone: String,
-    
-    address: {
+    businessAddress: {
       street: String,
       city: String,
       state: String,
       pincode: String,
+      country: { type: String, default: "India" },
       location: {
-        type: { type: String, default: "Point" },
-        coordinates: [Number], // [longitude, latitude]
+        type: {
+          type: String,
+          enum: ["Point"],
+        },
+        coordinates: {
+          type: [Number],
+        },
       },
     },
-
+    garageType: {
+      type: String,
+      enum: ["authorized", "independent", "multi-brand"],
+      required: [true, "Garage Type is required"],
+    },
+    gstNumber: String,
+    panNumber: String,
     servicesOffered: [String],
-    workingHours: [
+    operatingHours: [
       {
         day: { type: String, enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] },
         open: String,
@@ -45,38 +69,52 @@ const garageSchema = new mongoose.Schema(
         isClosed: { type: Boolean, default: false },
       },
     ],
-    
-    kycStatus: {
+    approvalStatus: {
       type: String,
-      enum: ["pending", "verified", "rejected"],
+      enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
-    kycDocuments: [
-      {
-        docType: String,
-        fileUrl: String,
-        uploadedAt: { type: Date, default: Date.now },
-      },
-    ],
-
-    rating: { type: Number, default: 0 },
-    totalReviews: { type: Number, default: 0 },
-    isActive: { type: Boolean, default: true },
-    
-    serviceAreas: [
-      {
-        name: String,
-        pincode: String,
-        radius: Number, // in KM
-      }
-    ]
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    lastLogin: Date,
   },
   {
     timestamps: true,
   }
 );
 
-// Geo-spatial index for location-based search
-garageSchema.index({ "address.location": "2dsphere" });
+// Geo-spatial index
+garageSchema.index({ "businessAddress.location": "2dsphere" });
+
+// Pre-save: Hash password and sanitize location
+garageSchema.pre("save", async function (next) {
+  // Hash password
+  if (this.isModified("password")) {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+
+  // Sanitize location
+  if (this.businessAddress && this.businessAddress.location) {
+    const loc = this.businessAddress.location;
+    if (!loc.coordinates || loc.coordinates.length < 2) {
+      // If coordinates are missing or incomplete, remove the location object
+      // so it doesn't trigger 2dsphere index errors
+      this.businessAddress.location = undefined;
+    } else {
+      // Ensure type is set if coordinates exist
+      loc.type = "Point";
+    }
+  }
+
+  next();
+});
+
+// Compare password
+garageSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 module.exports = mongoose.model("Garage", garageSchema);

@@ -84,7 +84,14 @@ exports.adminLogin = async (req, res) => {
     await user.save({ validateBeforeSave: false });
     setRefreshTokenCookie(res, refreshToken);
 
-    await logAction(req, { action: "LOGIN", entity: "User", entityId: user._id, details: { email } });
+    // Explicitly pass userId because req.user is not set by the login middleware
+    await logAction(req, { 
+      action: "LOGIN", 
+      entity: "User", 
+      entityId: user._id, 
+      userId: user._id,
+      details: { email } 
+    });
 
     return ApiResponse.success(res, "Admin login successful", {
       token: accessToken,
@@ -173,12 +180,14 @@ exports.getDashboard = async (req, res) => {
       totalDistributors,
       totalGarages,
       totalCustomers,
+      totalSalesTeam,
       totalProducts,
       totalOrders,
     ] = await Promise.all([
       User.countDocuments({ role: "distributor" }),
       User.countDocuments({ role: "garage" }),
       User.countDocuments({ role: "customer" }),
+      User.countDocuments({ role: "sales_team" }),
       Product.countDocuments({ isActive: true }),
       Order.countDocuments(),
     ]);
@@ -234,6 +243,7 @@ exports.getDashboard = async (req, res) => {
         totalDistributors,
         totalGarages,
         totalCustomers,
+        totalSalesTeam,
         totalProducts,
         totalOrders,
         pendingApprovals,
